@@ -2143,7 +2143,10 @@ subroutine write_restart_bc(fileobj, unlim_dim_level)
   class(FmsNetcdfFile_t), intent(inout) :: fileobj !< File object
   integer, intent(in), optional :: unlim_dim_level !< Unlimited dimension
                                                      !! level.
-  integer :: i, unit !< No description
+  integer :: i    !< No description
+#if defined(__PGI)
+  integer :: unit !< No description
+#endif
 
   if (.not. fileobj%is_restart) then
     call error("file "//trim(fileobj%path)//" is not a restart file.")
