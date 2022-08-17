@@ -50,6 +50,7 @@
       integer :: is, ie, js, je, tMe, dir
       integer :: buffer_recv_size, nlist, outunit
 
+
       outunit = stdout()
       ptr = LOC(mpp_domains_stack)
       l_size = size(f_addrs,1)
@@ -78,7 +79,7 @@
       send    = recv
 
       if(debug_message_passing) then
-         nlist = size(domain%list(:))  
+         nlist = size(domain%list(:))
          allocate(msg1(0:nlist-1), msg2(0:nlist-1), msg3(0:nlist-1) )
          msg1 = 0
          msg2 = 0
