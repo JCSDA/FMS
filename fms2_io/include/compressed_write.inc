@@ -17,7 +17,10 @@
 !* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
 !***********************************************************************
 !> @file
-!> @ingroup fms2_io
+!> @brief Compressed write routines for @ref write_data interface
+
+!> @addtogroup fms2_io_mod
+!> @{
 
 !> @brief For variables without a compressed dimension, this routine simply wraps
 !!        netcdf_write data.  If the variable does have a compressed axis, the I/O root
@@ -46,8 +49,6 @@ subroutine compressed_write_0d(fileobj, variable_name, cdata, unlim_dim_level, &
     call netcdf_write_data(fileobj, variable_name, cdata, &
                            unlim_dim_level=unlim_dim_level, corner=corner)
     return
-  else
-    call error("this branch should never be reached.")
   endif
 end subroutine compressed_write_0d
 
@@ -106,6 +107,10 @@ subroutine compressed_write_1d(fileobj, variable_name, cdata, unlim_dim_level, &
   real(kind=r4_kind), dimension(:), allocatable :: buf_r4_kind
   real(kind=r8_kind), dimension(:), allocatable :: buf_r8_kind
 
+  character(len=200) :: append_error_msg !< Msg to be appended to FATAL error message
+
+  append_error_msg = "compressed_write_1d: file:"//trim(fileobj%path)//" variable:"//trim(variable_name)
+
   compressed_dim_index = get_variable_compressed_dimension_index(fileobj, variable_name)
 
   if (compressed_dim_index(1) .eq. dimension_not_found) then
@@ -157,7 +162,7 @@ subroutine compressed_write_1d(fileobj, variable_name, cdata, unlim_dim_level, &
                                    edge_lengths=e)
             deallocate(buf_r8_kind)
           class default
-            call error("unsupported type.")
+            call error("unsupported variable type: "//trim(append_error_msg))
         end select
       endif
     enddo
@@ -172,7 +177,7 @@ subroutine compressed_write_1d(fileobj, variable_name, cdata, unlim_dim_level, &
       type is (real(kind=r8_kind))
         call mpp_send(cdata, size(cdata), fileobj%io_root)
       class default
-        call error("unsupported type.")
+        call error("unsupported variable type: "//trim(append_error_msg))
     end select
     call mpp_sync_self(check=EVENT_SEND)
   endif
@@ -211,6 +216,9 @@ subroutine compressed_write_2d(fileobj, variable_name, cdata, unlim_dim_level, &
   integer(kind=i8_kind), dimension(:,:), allocatable :: buf_i8_kind
   real(kind=r4_kind), dimension(:,:), allocatable :: buf_r4_kind
   real(kind=r8_kind), dimension(:,:), allocatable :: buf_r8_kind
+  character(len=200) :: append_error_msg !< Msg to be appended to FATAL error message
+
+  append_error_msg = "compressed_write_2d: file:"//trim(fileobj%path)//" variable:"//trim(variable_name)
 
   compressed_dim_index = get_variable_compressed_dimension_index(fileobj, variable_name)
   if (compressed_dim_index(1) .eq. dimension_not_found) then
@@ -262,7 +270,7 @@ subroutine compressed_write_2d(fileobj, variable_name, cdata, unlim_dim_level, &
                                    edge_lengths=e)
             deallocate(buf_r8_kind)
           class default
-            call error("unsupported type.")
+            call error("unsupported variable type: "//trim(append_error_msg))
         end select
       endif
     enddo
@@ -277,7 +285,7 @@ subroutine compressed_write_2d(fileobj, variable_name, cdata, unlim_dim_level, &
       type is (real(kind=r8_kind))
         call mpp_send(cdata, size(cdata), fileobj%io_root)
       class default
-        call error("unsupported type.")
+        call error("unsupported variable type: "//trim(append_error_msg))
     end select
     call mpp_sync_self(check=EVENT_SEND)
   endif
@@ -316,6 +324,9 @@ subroutine compressed_write_3d(fileobj, variable_name, cdata, unlim_dim_level, &
   integer(kind=i8_kind), dimension(:,:,:), allocatable :: buf_i8_kind
   real(kind=r4_kind), dimension(:,:,:), allocatable :: buf_r4_kind
   real(kind=r8_kind), dimension(:,:,:), allocatable :: buf_r8_kind
+  character(len=200) :: append_error_msg !< Msg to be appended to FATAL error message
+
+  append_error_msg = "compressed_write_3d: file:"//trim(fileobj%path)//" variable:"//trim(variable_name)
 
   compressed_dim_index = get_variable_compressed_dimension_index(fileobj, variable_name)
   if (compressed_dim_index(1) .eq. dimension_not_found) then
@@ -367,7 +378,7 @@ subroutine compressed_write_3d(fileobj, variable_name, cdata, unlim_dim_level, &
                                    edge_lengths=e)
             deallocate(buf_r8_kind)
           class default
-            call error("unsupported type.")
+            call error("unsupported variable type: "//trim(append_error_msg))
         end select
       endif
     enddo
@@ -382,7 +393,7 @@ subroutine compressed_write_3d(fileobj, variable_name, cdata, unlim_dim_level, &
       type is (real(kind=r8_kind))
         call mpp_send(cdata, size(cdata), fileobj%io_root)
       class default
-        call error("unsupported type.")
+        call error("unsupported variable type: "//trim(append_error_msg))
     end select
     call mpp_sync_self(check=EVENT_SEND)
   endif
@@ -421,6 +432,9 @@ subroutine compressed_write_4d(fileobj, variable_name, cdata, unlim_dim_level, &
   integer(kind=i8_kind), dimension(:,:,:,:), allocatable :: buf_i8_kind
   real(kind=r4_kind), dimension(:,:,:,:), allocatable :: buf_r4_kind
   real(kind=r8_kind), dimension(:,:,:,:), allocatable :: buf_r8_kind
+  character(len=200) :: append_error_msg !< Msg to be appended to FATAL error message
+
+  append_error_msg = "compressed_write_4d: file:"//trim(fileobj%path)//" variable:"//trim(variable_name)
 
   compressed_dim_index = get_variable_compressed_dimension_index(fileobj, variable_name)
   if (compressed_dim_index(1) .eq. dimension_not_found) then
@@ -472,7 +486,7 @@ subroutine compressed_write_4d(fileobj, variable_name, cdata, unlim_dim_level, &
                                    edge_lengths=e)
             deallocate(buf_r8_kind)
           class default
-            call error("unsupported type.")
+            call error("unsupported variable type: "//trim(append_error_msg))
         end select
       endif
     enddo
@@ -487,7 +501,7 @@ subroutine compressed_write_4d(fileobj, variable_name, cdata, unlim_dim_level, &
       type is (real(kind=r8_kind))
         call mpp_send(cdata, size(cdata), fileobj%io_root)
       class default
-        call error("unsupported type.")
+        call error("unsupported variable type: "//trim(append_error_msg))
     end select
     call mpp_sync_self(check=EVENT_SEND)
   endif
@@ -526,6 +540,9 @@ subroutine compressed_write_5d(fileobj, variable_name, cdata, unlim_dim_level, &
   integer(kind=i8_kind), dimension(:,:,:,:,:), allocatable :: buf_i8_kind
   real(kind=r4_kind), dimension(:,:,:,:,:), allocatable :: buf_r4_kind
   real(kind=r8_kind), dimension(:,:,:,:,:), allocatable :: buf_r8_kind
+  character(len=200) :: append_error_msg !< Msg to be appended to FATAL error message
+
+  append_error_msg = "compressed_write_5d: file:"//trim(fileobj%path)//" variable:"//trim(variable_name)
 
   compressed_dim_index = get_variable_compressed_dimension_index(fileobj, variable_name)
   if (compressed_dim_index(1) .eq. dimension_not_found) then
@@ -577,7 +594,7 @@ subroutine compressed_write_5d(fileobj, variable_name, cdata, unlim_dim_level, &
                                    edge_lengths=e)
             deallocate(buf_r8_kind)
           class default
-            call error("unsupported type.")
+            call error("unsupported variable type: "//trim(append_error_msg))
         end select
       endif
     enddo
@@ -592,7 +609,7 @@ subroutine compressed_write_5d(fileobj, variable_name, cdata, unlim_dim_level, &
       type is (real(kind=r8_kind))
         call mpp_send(cdata, size(cdata), fileobj%io_root)
       class default
-        call error("unsupported type.")
+        call error("unsupported variable type: "//trim(append_error_msg))
     end select
     call mpp_sync_self(check=EVENT_SEND)
   endif
@@ -728,3 +745,4 @@ subroutine compressed_write_5d_wrap(fileobj, variable_name, cdata, unlim_dim_lev
   call compressed_write(fileobj, variable_name, cdata, unlim_dim_level, corner, &
                         edge_lengths=edge_lengths)
 end subroutine compressed_write_5d_wrap
+!> @}

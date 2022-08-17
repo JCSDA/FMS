@@ -18,12 +18,14 @@
 !* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
 !***********************************************************************
 !> @file
-!> @ingroup mpp
 !> @brief Updates data domain of 3D field whose computational domains have been computed
 
+!> @addtogroup mpp_domains_mod
+!> @{
+
+    !> Updates data domain of 3D field whose computational domains have been computed
     subroutine MPP_DO_CHECK_3D_V_(f_addrsx,f_addrsy, domain, check_x, check_y, &
                                    d_type, ke, flags, name)
-!updates data domain of 3D field whose computational domains have been computed
       integer(i8_kind),  intent(in)        :: f_addrsx(:,:), f_addrsy(:,:)
       type(domain2d),      intent(in)        :: domain
       type(overlapSpec),   intent(in)        :: check_x, check_y
@@ -470,7 +472,8 @@
                               print*,"Error from MPP_DO_CHECK_V on pe = ", mpp_pe(), ": y component of vector ", &
                                    trim(field_name), " at point (", i, ",", j, ",", k, ") = ", fieldy(i,j,k), &
                                    " does not equal to the value = ", buffer(pos), " on pe ", check_y%recv(ind_y)%pe
-                              call mpp_error(debug_update_level, "MPP_DO_CHECK_V: mismatch on the boundary for symmetry point")
+                              call mpp_error(debug_update_level, &
+                                             &  "MPP_DO_CHECK_V: mismatch on the boundary for symmetry point")
                               exit CHECK_LOOP
                            end if
                         end do
@@ -506,7 +509,8 @@
                               print*,"Error from MPP_DO_CHECK_V on pe = ", mpp_pe(), ": x-component of vector ", &
                                    trim(field_name), " at point (", i, ",", j, ",", k, ") = ", fieldx(i,j,k), &
                                    " does not equal to the value = ", buffer(pos), " on pe ", check_x%recv(ind_x)%pe
-                              call mpp_error(debug_update_level, "MPP_DO_CHECK_V: mismatch on the boundary for symmetry point")
+                              call mpp_error(debug_update_level, &
+                                             &  "MPP_DO_CHECK_V: mismatch on the boundary for symmetry point")
                               exit CHECK_LOOP
                            end if
                         end do
@@ -529,3 +533,4 @@
       return
 
     end subroutine MPP_DO_CHECK_3D_V_
+!> @}

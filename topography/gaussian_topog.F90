@@ -27,9 +27,6 @@
 !! The mountain shapes are controlled by the height, half-width,
 !! and ridge-width parameters.
 
-!> @file
-!> @brief File for @ref gaussian_topog_mod
-
 !> @addtogroup gaussian_topog_mod
 !> @{
 module gaussian_topog_mod
@@ -216,7 +213,6 @@ end function get_gaussian_topog
 subroutine read_namelist
 
    integer :: unit, ierr, io
-   real    :: dtr
 
 !>  read namelist
 

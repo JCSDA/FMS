@@ -50,6 +50,9 @@ test_file_appendix_SOURCES=test_file_appendix.F90
 
 EXTRA_DIST = test_bc_restart.sh test_fms2_io.sh test_atmosphere_io.sh test_io_simple.sh test_global_att.sh test_io_with_mask.sh test_read_ascii_file.sh
 
+# fixes issue with make implicitly trying to use m2c for argparse
+%.o: %.mod
+
 argparse.mod: argparse.$(OBJEXT)
 setup.mod: setup.$(OBJEXT)
 setup.$(OBJEXT): argparse.mod
@@ -60,15 +63,10 @@ test_fms2_io.$(OBJEXT): argparse.mod
 # Run the test program.
 TESTS = test_bc_restart.sh test_fms2_io.sh test_atmosphere_io.sh test_io_simple.sh test_io_with_mask.sh test_global_att.sh test_read_ascii_file.sh
 
-# skips tests that fail if using netCDF 4.7.4
-if SKIP_FMS2_IO_TESTS
-skipflag="skip"
-else
-skipflag=""
-endif
-
 # Set srcdir as evironment variable to be reference in the job script
-TESTS_ENVIRONMENT = srcdir="$(top_srcdir)"; \
-                    netcdf_version_skip=${skipflag}
+TEST_EXTENSIONS = .sh
+SH_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
+                  $(top_srcdir)/tap-driver.sh
+TESTS_ENVIRONMENT = srcdir="$(top_srcdir)"
 
-CLEANFILES = *.mod *.nc *.nc.* input.nml logfile.000000.out the_mask ascii_test1
+CLEANFILES = *.mod *.nc *.nc.* input.nml logfile.000000.out the_mask ascii_test1 *.dpi *.spi *.dyn *.spl *-files/*

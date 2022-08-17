@@ -16,15 +16,9 @@
 !* You should have received a copy of the GNU Lesser General Public
 !* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
 !***********************************************************************
-!
-! nf95 -r8 -g -I ~/regression/ia64/23-Jun-2005/CM2.1U_Control-1990_E1.k32pe/include/ -D_TEST_DRIFTERS -D_F95 quicksort.F90 drifters_core.F90
-
 !> @defgroup drifters_core_mod drifters_core_mod
 !> @ingroup drifters
 !> @brief Handles the mechanics for adding and removing drifters
-
-!> @file
-!> @brief File for @ref drifters_core_mod
 
 module drifters_core_mod
   use platform_mod
@@ -33,9 +27,7 @@ module drifters_core_mod
 
   public :: drifters_core_type, drifters_core_new, drifters_core_del, drifters_core_set_ids
   public :: drifters_core_remove_and_add, drifters_core_set_positions, assignment(=)
-!#ifdef _TEST_DRIFTERS_CORE
   public :: drifters_core_print,  drifters_core_resize
-!#endif
 
   ! Globals
   integer, parameter, private   :: MAX_STR_LEN = 128
@@ -220,7 +212,8 @@ subroutine drifters_core_remove_and_add(self, indices_to_remove_in, &
 
     ! cannot remove more than there are elements
     if(self%np + n_diff < 0) then
-       ermesg = 'drifters::ERROR attempting to remove more elements than there are elements in drifters_core_remove_and_add'
+       ermesg = 'drifters::ERROR attempting to remove more elements than there are elements in '// &
+               &'drifters_core_remove_and_add'
        return
     endif
 

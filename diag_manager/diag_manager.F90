@@ -92,7 +92,8 @@
 !!          </UL>
 !!          The 'file duration', if absent, will be equal to frequency for creating a new file.
 !!
-!!          Thus, the above means: create a new file every 10 days, each file will last 6 hours from creation time, no files will
+!!          Thus, the above means: create a new file every 10 days, each file will last 6 hours
+!!          from creation time, no files will
 !!          be created before time "1 1 7 0 0 0".
 !!
 !!          In this example the string
@@ -105,38 +106,45 @@
 !!     <LI> New time axis for time averaged fields.  Users can use a namelist option to handle the time value written
 !!          to time axis for time averaged fields.
 !!
-!!          If <TT>mix_snapshot_average_fields=.true.</TT> then a time averaged file will have time values corresponding to
-!!          ending time_bound e.g. January monthly average is labeled Feb01. Users can have both snapshot and averaged fields in
+!!          If <TT>mix_snapshot_average_fields=.true.</TT> then a time averaged file will have
+!!          time values corresponding to
+!!          ending time_bound e.g. January monthly average is labeled Feb01. Users can have
+!!          both snapshot and averaged fields in
 !!          one file.
 !!
-!!          If <TT>mix_snapshot_average_fields=.false.</TT> The time value written to time axis for time averaged fields is the
+!!          If <TT>mix_snapshot_average_fields=.false.</TT> The time value written to time
+!!          axis for time averaged fields is the
 !!          middle on the averaging time. For example, January monthly mean will be written at Jan 16 not Feb 01 as
-!!          before. However, to use this new feature users should <B>separate</B> snapshot fields and time averaged fields in
+!!          before. However, to use this new feature users should <B>separate</B> snapshot
+!!          fields and time averaged fields in
 !!          <B>different</B> files or a fatal error will occur.
 !!
 !!          The namelist <B>default</B> value is <TT>mix_snapshot_average_fields=.false.</TT></LI>
-!!     <LI> Time average, Root Mean Square, Max and Min, and diurnal. In addition to time average users can also get then Root Mean Square, Max or Min value
+!!     <LI> Time average, Root Mean Square, Max and Min, and diurnal. In addition to time average
+!!     users can also get then Root Mean Square, Max or Min value
 !!          during the same interval of time as time average. For this purpose, in the diag table users must replace
-!!          <TT>.true.</TT> or <TT>.false.</TT> by <TT>rms</TT>, <TT>max</TT> or <TT>min</TT>.  <B><I>Note:</I></B> Currently, max
+!!          <TT>.true.</TT> or <TT>.false.</TT> by <TT>rms</TT>, <TT>max</TT> or <TT>min</TT>.
+!!           <B><I>Note:</I></B> Currently, max
 !!          and min are not available for regional output.
 !!
-!!          A diurnal average or the average of an integer power can also be requested using <TT>diurnal##</TT> or <TT>pow##</TT> where
+!!          A diurnal average or the average of an integer power can also be requested using
+!!          <TT>diurnal##</TT> or <TT>pow##</TT> where
 !!          <TT>##</TT> are the number of diurnal sections or integer power to average.</LI>
 !!     <LI> <TT>standard_name</TT> is added as optional argument in @ref register_diag_field. </LI>
 !!     <LI>When namelist variable <TT>debug_diag_manager = .true.</TT> array
 !!         bounds are checked in @ref send_data.</LI>
 !!     <LI>Coordinate attributes can be written in the output file if the
-!!         argument "<TT>aux</TT>" is given in @ref diag_axis_mod#diag_axis_init . The
+!!         argument "aux" is given in @ref diag_axis_mod#diag_axis_init . The
 !!         corresponding fields (geolat/geolon) should also be written to the
 !!         same file.</LI>
 !!   </OL>
 
 !> @file
+!> @ingroup diag_manager_mod
 !> @brief File for @ref diag_manager_mod
 
 MODULE diag_manager_mod
 use platform_mod
-
   ! <NAMELIST NAME="diag_manager_nml">
   !   <DATA NAME="append_pelist_name" TYPE="LOGICAL" DEFAULT=".FALSE.">
   !   </DATA>
@@ -164,12 +172,15 @@ use platform_mod
   !     CMOR standard value of -1.0e20.
   !   </DATA>
   !   <DATA NAME="issue_oor_warnings" TYPE="LOGICAL" DEFAULT=".TRUE.">
-  !     If <TT>.TRUE.</TT>, then the <TT>diag_manager</TT> will check for values outside the valid range.  This range is defined in
-  !     the model, and passed to the <TT>diag_manager_mod</TT> via the OPTIONAL variable range in the <TT>register_diag_field</TT>
+  !     If <TT>.TRUE.</TT>, then the <TT>diag_manager</TT> will check for values outside the
+  !     valid range.  This range is defined in
+  !     the model, and passed to the <TT>diag_manager_mod</TT> via the OPTIONAL variable range
+  !     in the <TT>register_diag_field</TT>
   !     function.
   !   </DATA>
   !   <DATA NAME="oor_warnings_fatal" TYPE="LOGICAL" DEFAULT=".FALSE.">
-  !     If <TT>.TRUE.</TT> then <TT>diag_manager_mod</TT> will issue a <TT>FATAL</TT> error if any values for the output field are
+  !     If <TT>.TRUE.</TT> then <TT>diag_manager_mod</TT> will issue a <TT>FATAL</TT> error
+  !     if any values for the output field are
   !     outside the given range.
   !   </DATA>
   !   <DATA NAME="max_field_attributes" TYPE="INTEGER" DEFAULT="4">
@@ -179,13 +190,16 @@ use platform_mod
   !     Maximum number of user definable global attributes per file.
   !   </DATA>
   !   <DATA NAME="prepend_date" TYPE="LOGICAL" DEFAULT=".TRUE.">
-  !     If <TT>.TRUE.</TT> then prepend the file start date to the output file.  <TT>.TRUE.</TT> is only supported if the
-  !      diag_manager_init routine is called with the optional time_init parameter.  Note: This was usually done by FRE after the
+  !     If <TT>.TRUE.</TT> then prepend the file start date to the output file.  <TT>.TRUE.</TT>
+  !     is only supported if the
+  !      diag_manager_init routine is called with the optional time_init parameter.  Note:
+  !      This was usually done by FRE after the
   !     model run.
   !   </DATA>
   !   <DATA NAME="region_out_use_alt_value" TYPE="LOGICAL" DEFAULT=".TRUE.">
   !     Will determine which value to use when checking a regional output if the region is the full axis or a sub-axis.
-  !     The values are defined as <TT>GLO_REG_VAL</TT> (-999) and <TT>GLO_REG_VAL_ALT</TT> (-1) in <TT>diag_data_mod</TT>.
+  !     The values are defined as <TT>GLO_REG_VAL</TT> (-999) and <TT>GLO_REG_VAL_ALT</TT>
+  !     (-1) in <TT>diag_data_mod</TT>.
   !   </DATA>
   !   <DATA NAME="use_mpp_io" TYPE="LOGICAL" DEFAULT=".false.">
   !    Set to true, diag_manager uses mpp_io.  Default is fms2_io.
@@ -195,18 +209,12 @@ use platform_mod
   USE time_manager_mod, ONLY: set_time, set_date, get_time, time_type, OPERATOR(>=), OPERATOR(>),&
        & OPERATOR(<), OPERATOR(==), OPERATOR(/=), OPERATOR(/), OPERATOR(+), ASSIGNMENT(=), get_date, &
        & get_ticks_per_second
-  USE mpp_io_mod, ONLY: mpp_open, mpp_close, mpp_get_maxunits
   USE mpp_mod, ONLY: mpp_get_current_pelist, mpp_pe, mpp_npes, mpp_root_pe, mpp_sum
 
-#ifdef INTERNAL_FILE_NML
   USE mpp_mod, ONLY: input_nml_file
-#else
-  USE fms_mod, ONLY: open_namelist_file, close_file
-#endif
 
   USE fms_mod, ONLY: error_mesg, FATAL, WARNING, NOTE, stdout, stdlog, write_version_number,&
-       & file_exist, fms_error_handler, check_nml_error, get_mosaic_tile_file, lowercase
-  USE fms_io_mod, ONLY: get_instance_filename
+       & fms_error_handler, check_nml_error, lowercase
   USE diag_axis_mod, ONLY: diag_axis_init, get_axis_length, get_axis_num, get_domain2d, get_tile_count,&
        & diag_axis_add_attribute, axis_compatible_check, CENTER, NORTH, EAST
   USE diag_util_mod, ONLY: get_subfield_size, log_diag_field_info, update_bounds,&
@@ -224,7 +232,7 @@ use platform_mod
        & diag_log_unit, time_unit_list, pelist_name, max_axes, module_is_initialized, max_num_axis_sets,&
        & use_cmor, issue_oor_warnings, oor_warnings_fatal, oor_warning, pack_size,&
        & max_out_per_in_field, flush_nc_files, region_out_use_alt_value, max_field_attributes, output_field_type,&
-       & max_file_attributes, max_axis_attributes, prepend_date, DIAG_FIELD_NOT_FOUND, diag_init_time, diag_data_init, &
+       & max_file_attributes, max_axis_attributes, prepend_date, DIAG_FIELD_NOT_FOUND, diag_init_time, diag_data_init,&
        & use_mpp_io
   USE diag_data_mod, ONLY:  fileobj, fileobjU, fnum_for_domain, fileobjND
   USE diag_table_mod, ONLY: parse_diag_table
@@ -334,10 +342,6 @@ use platform_mod
      MODULE PROCEDURE send_data_1d
      MODULE PROCEDURE send_data_2d
      MODULE PROCEDURE send_data_3d
-#ifdef OVERLOAD_R8
-     MODULE PROCEDURE send_data_2d_r8
-     MODULE PROCEDURE send_data_3d_r8
-#endif
   END INTERFACE
 
   !> @brief Register a diagnostic field for a given module
@@ -377,14 +381,22 @@ CONTAINS
     CHARACTER(len=*), INTENT(in) :: module_name, field_name
     TYPE(time_type), OPTIONAL, INTENT(in) :: init_time
     CHARACTER(len=*), OPTIONAL, INTENT(in) :: long_name, units, standard_name
-    REAL, OPTIONAL, INTENT(in) :: missing_value
-    REAL,  DIMENSION(2), OPTIONAL, INTENT(in) :: RANGE
+    CLASS(*), OPTIONAL, INTENT(in) :: missing_value
+    CLASS(*), DIMENSION(:), OPTIONAL, INTENT(in) :: range
     LOGICAL, OPTIONAL, INTENT(in) :: do_not_log !< if TRUE, field information is not logged
     CHARACTER(len=*), OPTIONAL, INTENT(out):: err_msg
     INTEGER, OPTIONAL, INTENT(in) :: area, volume
     CHARACTER(len=*), OPTIONAL, INTENT(in):: realm !< String to set as the value to the modeling_realm attribute
 
     IF ( PRESENT(err_msg) ) err_msg = ''
+
+    ! Fatal error if range is present and its extent is not 2.
+    IF ( PRESENT(range) ) THEN
+       IF ( SIZE(range) .NE. 2 ) THEN
+          ! <ERROR STATUS="FATAL">extent of range should be 2</ERROR>
+          CALL error_mesg ('diag_manager_mod::register_diag_field', 'extent of range should be 2', FATAL)
+       END IF
+    END IF
 
     IF ( PRESENT(init_time) ) THEN
        register_diag_field_scalar = register_diag_field_array(module_name, field_name,&
@@ -407,7 +419,8 @@ CONTAINS
     INTEGER, INTENT(in) :: axes(:)
     TYPE(time_type), INTENT(in) :: init_time
     CHARACTER(len=*), OPTIONAL, INTENT(in) :: long_name, units, standard_name
-    REAL, OPTIONAL, INTENT(in) :: missing_value, RANGE(2)
+    CLASS(*), OPTIONAL, INTENT(in) :: missing_value
+    CLASS(*), DIMENSION(:), OPTIONAL, INTENT(in) :: range
     LOGICAL, OPTIONAL, INTENT(in) :: mask_variant,verbose
     LOGICAL, OPTIONAL, INTENT(in) :: do_not_log !< if TRUE, field info is not logged
     CHARACTER(len=*), OPTIONAL, INTENT(out):: err_msg
@@ -421,11 +434,9 @@ CONTAINS
     CHARACTER(len=*), OPTIONAL, INTENT(in):: realm !< String to set as the value to the modeling_realm attribute
 
     INTEGER :: field, j, ind, file_num, freq
-    INTEGER :: i, cm_ind, cm_file_num
     INTEGER :: output_units
     INTEGER :: stdout_unit
     LOGICAL :: mask_variant1, verbose1
-    LOGICAL :: cm_found
     CHARACTER(len=128) :: msg
 
     ! get stdout unit number
@@ -444,6 +455,14 @@ CONTAINS
     END IF
 
     IF ( PRESENT(err_msg) ) err_msg = ''
+
+    ! Fatal error if range is present and its extent is not 2.
+    IF ( PRESENT(range) ) THEN
+       IF ( SIZE(range) .NE. 2 ) THEN
+          ! <ERROR STATUS="FATAL">extent of range should be 2</ERROR>
+          CALL error_mesg ('diag_manager_mod::register_diag_field', 'extent of range should be 2', FATAL)
+       END IF
+    END IF
 
     ! Call register static, then set static back to false
     register_diag_field_array = register_static_field(module_name, field_name, axes,&
@@ -594,8 +613,8 @@ CONTAINS
     CHARACTER(len=*), INTENT(in) :: module_name, field_name
     INTEGER, DIMENSION(:), INTENT(in) :: axes
     CHARACTER(len=*), OPTIONAL, INTENT(in) :: long_name, units, standard_name
-    REAL, OPTIONAL, INTENT(in) :: missing_value
-    REAL, DIMENSION(2), OPTIONAL, INTENT(in) :: range
+    CLASS(*), OPTIONAL, INTENT(in) :: missing_value
+    CLASS(*), DIMENSION(:), OPTIONAL, INTENT(in) :: range
     LOGICAL, OPTIONAL, INTENT(in) :: mask_variant
     LOGICAL, OPTIONAL, INTENT(in) :: DYNAMIC
     LOGICAL, OPTIONAL, INTENT(in) :: do_not_log !< if TRUE, field information is not logged
@@ -608,7 +627,8 @@ CONTAINS
     INTEGER,          OPTIONAL, INTENT(in) :: volume !< Field ID for the volume field associated with this field
     CHARACTER(len=*), OPTIONAL, INTENT(in) :: realm !< String to set as the value to the modeling_realm attribute
 
-    REAL :: missing_value_use
+    REAL :: missing_value_use !< Local copy of missing_value
+    REAL, DIMENSION(2) :: range_use !< Local copy of range
     INTEGER :: field, num_axes, j, out_num, k
     INTEGER, DIMENSION(3) :: siz, local_siz, local_start, local_end ! indices of local domain of global axes
     INTEGER :: tile, file_num
@@ -627,7 +647,15 @@ CONTAINS
        IF ( use_cmor ) THEN
           missing_value_use = CMOR_MISSING_VALUE
        ELSE
-          missing_value_use = missing_value
+          SELECT TYPE (missing_value)
+          TYPE IS (real(kind=r4_kind))
+             missing_value_use = missing_value
+          TYPE IS (real(kind=r8_kind))
+             missing_value_use = real(missing_value)
+          CLASS DEFAULT
+             CALL error_mesg ('diag_manager_mod::register_static_field',&
+                  & 'The missing_value is not one of the supported types of real(kind=4) or real(kind=8)', FATAL)
+          END SELECT
        END IF
     END IF
 
@@ -653,6 +681,14 @@ CONTAINS
        allow_log = .NOT.do_not_log
     ELSE
        allow_log = .TRUE.
+    END IF
+
+    ! Fatal error if range is present and its extent is not 2.
+    IF ( PRESENT(range) ) THEN
+       IF ( SIZE(range) .NE. 2 ) THEN
+          ! <ERROR STATUS="FATAL">extent of range should be 2</ERROR>
+          CALL error_mesg ('diag_manager_mod::register_static_field', 'extent of range should be 2', FATAL)
+       END IF
     END IF
 
     ! Namelist do_diag_field_log is by default false.  Thus to log the
@@ -774,9 +810,18 @@ CONTAINS
     END IF
 
     IF ( PRESENT(range) ) THEN
-       input_fields(field)%range = range
+       SELECT TYPE (range)
+       TYPE IS (real(kind=r4_kind))
+          range_use = range
+       TYPE IS (real(kind=r8_kind))
+          range_use = real(range)
+       CLASS DEFAULT
+          CALL error_mesg ('diag_manager_mod::register_static_field',&
+               & 'The range is not one of the supported types of real(kind=4) or real(kind=8)', FATAL)
+       END SELECT
+       input_fields(field)%range = range_use
        ! don't use the range if it is not a valid range
-       input_fields(field)%range_present = range(2) .gt. range(1)
+       input_fields(field)%range_present = range_use(2) .gt. range_use(1)
     ELSE
        input_fields(field)%range = (/ 1., 0. /)
        input_fields(field)%range_present = .FALSE.
@@ -1140,8 +1185,8 @@ CONTAINS
     IF ( PRESENT(volume) ) THEN
        IF ( volume.LE.0 ) THEN
           IF ( fms_error_handler('diag_manager_mod::init_field_cell_measure',&
-               & 'VOLUME field not in diag_table for field '//TRIM(input_fields(output_field%input_field)%module_name)//&
-               & '/'//TRIM(input_fields(output_field%input_field)%field_name), err_msg) ) RETURN
+              &'VOLUME field not in diag_table for field '//TRIM(input_fields(output_field%input_field)%module_name)//&
+              & '/'//TRIM(input_fields(output_field%input_field)%field_name), err_msg) ) RETURN
        END IF
     END IF
 
@@ -1242,35 +1287,45 @@ CONTAINS
   !> @return true if send is successful
   LOGICAL FUNCTION send_data_0d(diag_field_id, field, time, err_msg)
     INTEGER, INTENT(in) :: diag_field_id
-    REAL, INTENT(in) :: field
+    CLASS(*), INTENT(in) :: field
     TYPE(time_type), INTENT(in), OPTIONAL :: time
     CHARACTER(len=*), INTENT(out), OPTIONAL :: err_msg
 
-    REAL :: field_out(1, 1, 1)
+    REAL :: field_out(1, 1, 1) !< Local copy of field
 
     ! If diag_field_id is < 0 it means that this field is not registered, simply return
     IF ( diag_field_id <= 0 ) THEN
        send_data_0d = .FALSE.
        RETURN
     END IF
+
     ! First copy the data to a three d array with last element 1
-    field_out(1, 1, 1) = field
+    SELECT TYPE (field)
+    TYPE IS (real(kind=r4_kind))
+       field_out(1, 1, 1) = field
+    TYPE IS (real(kind=r8_kind))
+       field_out(1, 1, 1) = real(field)
+    CLASS DEFAULT
+       CALL error_mesg ('diag_manager_mod::send_data_0d',&
+            & 'The field is not one of the supported types of real(kind=4) or real(kind=8)', FATAL)
+    END SELECT
+
     send_data_0d = send_data_3d(diag_field_id, field_out, time, err_msg=err_msg)
   END FUNCTION send_data_0d
 
   !> @return true if send is successful
   LOGICAL FUNCTION send_data_1d(diag_field_id, field, time, is_in, mask, rmask, ie_in, weight, err_msg)
     INTEGER, INTENT(in) :: diag_field_id
-    REAL, DIMENSION(:), INTENT(in) :: field
-    REAL, INTENT(in), OPTIONAL :: weight
-    REAL, INTENT(in), DIMENSION(:), OPTIONAL :: rmask
+    CLASS(*), DIMENSION(:), INTENT(in) :: field
+    CLASS(*), INTENT(in), OPTIONAL :: weight
+    CLASS(*), INTENT(in), DIMENSION(:), OPTIONAL :: rmask
     TYPE (time_type), INTENT(in), OPTIONAL :: time
     INTEGER, INTENT(in), OPTIONAL :: is_in, ie_in
     LOGICAL, INTENT(in), DIMENSION(:), OPTIONAL :: mask
     CHARACTER(len=*), INTENT(out), OPTIONAL :: err_msg
 
-    REAL, DIMENSION(SIZE(field(:)), 1, 1) :: field_out
-    LOGICAL, DIMENSION(SIZE(field(:)), 1, 1) ::  mask_out
+    REAL, DIMENSION(SIZE(field(:)), 1, 1) :: field_out !< Local copy of field
+    LOGICAL, DIMENSION(SIZE(field(:)), 1, 1) ::  mask_out !< Local copy of mask
 
     ! If diag_field_id is < 0 it means that this field is not registered, simply return
     IF ( diag_field_id <= 0 ) THEN
@@ -1279,7 +1334,15 @@ CONTAINS
     END IF
 
     ! First copy the data to a three d array with last element 1
-    field_out(:, 1, 1) = field
+    SELECT TYPE (field)
+    TYPE IS (real(kind=r4_kind))
+       field_out(:, 1, 1) = field
+    TYPE IS (real(kind=r8_kind))
+       field_out(:, 1, 1) = real(field)
+    CLASS DEFAULT
+       CALL error_mesg ('diag_manager_mod::send_data_1d',&
+            & 'The field is not one of the supported types of real(kind=4) or real(kind=8)', FATAL)
+    END SELECT
 
     ! Default values for mask
     IF ( PRESENT(mask) ) THEN
@@ -1288,7 +1351,18 @@ CONTAINS
        mask_out = .TRUE.
     END IF
 
-    IF ( PRESENT(rmask) ) WHERE (rmask < 0.5) mask_out(:, 1, 1) = .FALSE.
+    IF ( PRESENT(rmask) ) THEN
+       SELECT TYPE (rmask)
+       TYPE IS (real(kind=r4_kind))
+          WHERE (rmask < 0.5_r4_kind) mask_out(:, 1, 1) = .FALSE.
+       TYPE IS (real(kind=r8_kind))
+          WHERE (rmask < 0.5_r8_kind) mask_out(:, 1, 1) = .FALSE.
+       CLASS DEFAULT
+          CALL error_mesg ('diag_manager_mod::send_data_1d',&
+               & 'The rmask is not one of the supported types of real(kind=4) or real(kind=8)', FATAL)
+       END SELECT
+    END IF
+
     IF ( PRESENT(mask) .OR. PRESENT(rmask) ) THEN
        IF ( PRESENT(is_in) .OR. PRESENT(ie_in) ) THEN
           send_data_1d = send_data_3d(diag_field_id, field_out, time, is_in=is_in, js_in=1, ks_in=1,&
@@ -1311,16 +1385,16 @@ CONTAINS
   LOGICAL FUNCTION send_data_2d(diag_field_id, field, time, is_in, js_in, &
        & mask, rmask, ie_in, je_in, weight, err_msg)
     INTEGER, INTENT(in) :: diag_field_id
-    REAL, INTENT(in), DIMENSION(:,:) :: field
-    REAL, INTENT(in), OPTIONAL :: weight
+    CLASS(*), INTENT(in), DIMENSION(:,:) :: field
+    CLASS(*), INTENT(in), OPTIONAL :: weight
     TYPE (time_type), INTENT(in), OPTIONAL :: time
     INTEGER, INTENT(in), OPTIONAL :: is_in, js_in, ie_in, je_in
     LOGICAL, INTENT(in), DIMENSION(:,:), OPTIONAL :: mask
-    REAL, INTENT(in), DIMENSION(:,:),OPTIONAL :: rmask
+    CLASS(*), INTENT(in), DIMENSION(:,:),OPTIONAL :: rmask
     CHARACTER(len=*), INTENT(out), OPTIONAL :: err_msg
 
-    REAL, DIMENSION(SIZE(field,1),SIZE(field,2),1) :: field_out
-    LOGICAL, DIMENSION(SIZE(field,1),SIZE(field,2),1) ::  mask_out
+    REAL, DIMENSION(SIZE(field,1),SIZE(field,2),1) :: field_out !< Local copy of field
+    LOGICAL, DIMENSION(SIZE(field,1),SIZE(field,2),1) ::  mask_out !< Local copy of mask
 
     ! If diag_field_id is < 0 it means that this field is not registered, simply return
     IF ( diag_field_id <= 0 ) THEN
@@ -1329,7 +1403,15 @@ CONTAINS
     END IF
 
     ! First copy the data to a three d array with last element 1
-    field_out(:, :, 1) = field
+    SELECT TYPE (field)
+    TYPE IS (real(kind=r4_kind))
+       field_out(:, :, 1) = field
+    TYPE IS (real(kind=r8_kind))
+       field_out(:, :, 1) = real(field)
+    CLASS DEFAULT
+       CALL error_mesg ('diag_manager_mod::send_data_2d',&
+            & 'The field is not one of the supported types of real(kind=4) or real(kind=8)', FATAL)
+    END SELECT
 
     ! Default values for mask
     IF ( PRESENT(mask) ) THEN
@@ -1338,7 +1420,18 @@ CONTAINS
        mask_out = .TRUE.
     END IF
 
-    IF ( PRESENT(rmask) ) WHERE ( rmask < 0.5 ) mask_out(:, :, 1) = .FALSE.
+    IF ( PRESENT(rmask) ) THEN
+       SELECT TYPE (rmask)
+       TYPE IS (real(kind=r4_kind))
+          WHERE ( rmask < 0.5_r4_kind ) mask_out(:, :, 1) = .FALSE.
+       TYPE IS (real(kind=r8_kind))
+          WHERE ( rmask < 0.5_r8_kind ) mask_out(:, :, 1) = .FALSE.
+       CLASS DEFAULT
+          CALL error_mesg ('diag_manager_mod::send_data_2d',&
+               & 'The rmask is not one of the supported types of real(kind=4) or real(kind=8)', FATAL)
+       END SELECT
+    END IF
+
     IF ( PRESENT(mask) .OR. PRESENT(rmask) ) THEN
        send_data_2d = send_data_3d(diag_field_id, field_out, time, is_in=is_in, js_in=js_in, ks_in=1, mask=mask_out,&
             & ie_in=ie_in, je_in=je_in, ke_in=1, weight=weight, err_msg=err_msg)
@@ -1348,100 +1441,16 @@ CONTAINS
     END IF
   END FUNCTION send_data_2d
 
-#ifdef OVERLOAD_R8
-  !> @return true if send is successful
-  LOGICAL FUNCTION send_data_2d_r8(diag_field_id, field, time, is_in, js_in, &
-       & mask, rmask, ie_in, je_in, weight, err_msg)
-    INTEGER, INTENT(in) :: diag_field_id
-    REAL(kind=8), INTENT(in), DIMENSION(:,:) :: field
-    REAL, INTENT(in), OPTIONAL :: weight
-    TYPE (time_type), INTENT(in), OPTIONAL :: time
-    INTEGER, INTENT(in), OPTIONAL :: is_in, js_in, ie_in, je_in
-    LOGICAL, INTENT(in), DIMENSION(:,:), OPTIONAL :: mask
-    REAL, INTENT(in), DIMENSION(:,:),OPTIONAL :: rmask
-    CHARACTER(len=*), INTENT(out), OPTIONAL :: err_msg
-
-    REAL, DIMENSION(SIZE(field,1),SIZE(field,2),1) :: field_out
-    LOGICAL, DIMENSION(SIZE(field,1),SIZE(field,2),1) ::  mask_out
-
-    ! If diag_field_id is < 0 it means that this field is not registered, simply return
-    IF ( diag_field_id <= 0 ) THEN
-       send_data_2d_r8 = .FALSE.
-       RETURN
-    END IF
-
-    ! First copy the data to a three d array with last element 1
-    field_out(:, :, 1) = field
-
-    ! Default values for mask
-    IF ( PRESENT(mask) ) THEN
-       mask_out(:, :, 1) = mask
-    ELSE
-       mask_out = .TRUE.
-    END IF
-
-    IF ( PRESENT(rmask) ) WHERE ( rmask < 0.5 ) mask_out(:, :, 1) = .FALSE.
-    IF ( PRESENT(mask) .OR. PRESENT(rmask) ) THEN
-       send_data_2d_r8 = send_data_3d(diag_field_id, field_out, time, is_in=is_in, js_in=js_in, ks_in=1, mask=mask_out,&
-            & ie_in=ie_in, je_in=je_in, ke_in=1, weight=weight, err_msg=err_msg)
-    ELSE
-       send_data_2d_r8 = send_data_3d(diag_field_id, field_out, time, is_in=is_in, js_in=js_in, ks_in=1,&
-            & ie_in=ie_in, je_in=je_in, ke_in=1, weight=weight, err_msg=err_msg)
-    END IF
-  END FUNCTION send_data_2d_r8
-
-  !> @return true if send is successful
-  LOGICAL FUNCTION send_data_3d_r8(diag_field_id, field, time, is_in, js_in, ks_in, &
-             & mask, rmask, ie_in, je_in, ke_in, weight, err_msg)
-    INTEGER, INTENT(in) :: diag_field_id
-    REAL(kind=8), INTENT(in), DIMENSION(:,:,:) :: field
-    REAL, INTENT(in), OPTIONAL :: weight
-    TYPE (time_type), INTENT(in), OPTIONAL :: time
-    INTEGER, INTENT(in), OPTIONAL :: is_in, js_in, ks_in,ie_in,je_in, ke_in
-    LOGICAL, INTENT(in), DIMENSION(:,:,:), OPTIONAL :: mask
-    REAL, INTENT(in), DIMENSION(:,:,:),OPTIONAL :: rmask
-    CHARACTER(len=*), INTENT(out), OPTIONAL :: err_msg
-
-    REAL, DIMENSION(SIZE(field,1),SIZE(field,2),size(field,3)) :: field_out
-    LOGICAL, DIMENSION(SIZE(field,1),SIZE(field,2),size(field,3)) ::  mask_out
-
-    ! If diag_field_id is < 0 it means that this field is not registered, simply return
-    IF ( diag_field_id <= 0 ) THEN
-       send_data_3d_r8 = .FALSE.
-       RETURN
-    END IF
-
-    ! First copy the data to a three d array with last element 1
-    field_out = field
-
-    ! Default values for mask
-    IF ( PRESENT(mask) ) THEN
-       mask_out = mask
-    ELSE
-       mask_out = .TRUE.
-    END IF
-
-    IF ( PRESENT(rmask) ) WHERE ( rmask < 0.5 ) mask_out = .FALSE.
-    IF ( PRESENT(mask) .OR. PRESENT(rmask) ) THEN
-       send_data_3d_r8 = send_data_3d(diag_field_id, field_out, time, is_in=is_in, js_in=js_in, ks_in=ks_in, mask=mask_out,&
-            & ie_in=ie_in, je_in=je_in, ke_in=ke_in, weight=weight, err_msg=err_msg)
-    ELSE
-       send_data_3d_r8 = send_data_3d(diag_field_id, field_out, time, is_in=is_in, js_in=js_in, ks_in=ks_in,&
-            & ie_in=ie_in, je_in=je_in, ke_in=ke_in, weight=weight, err_msg=err_msg)
-    END IF
-  END FUNCTION send_data_3d_r8
-#endif
-
   !> @return true if send is successful
   LOGICAL FUNCTION send_data_3d(diag_field_id, field, time, is_in, js_in, ks_in, &
              & mask, rmask, ie_in, je_in, ke_in, weight, err_msg)
     INTEGER, INTENT(in) :: diag_field_id
-    REAL, DIMENSION(:,:,:), INTENT(in) :: field
-    REAL, INTENT(in), OPTIONAL :: weight
+    CLASS(*), DIMENSION(:,:,:), INTENT(in) :: field
+    CLASS(*), INTENT(in), OPTIONAL :: weight
     TYPE (time_type), INTENT(in), OPTIONAL :: time
     INTEGER, INTENT(in), OPTIONAL :: is_in, js_in, ks_in,ie_in,je_in, ke_in
     LOGICAL, DIMENSION(:,:,:), INTENT(in), OPTIONAL :: mask
-    REAL, DIMENSION(:,:,:), INTENT(in), OPTIONAL :: rmask
+    CLASS(*), DIMENSION(:,:,:), INTENT(in), OPTIONAL :: rmask
     CHARACTER(len=*), INTENT(out), OPTIONAL :: err_msg
 
     REAL :: weight1
@@ -1475,6 +1484,8 @@ CONTAINS
     CHARACTER(len=256) :: err_msg_local
     CHARACTER(len=128) :: error_string, error_string1
 
+    REAL, ALLOCATABLE, DIMENSION(:,:,:) :: field_out !< Local copy of field
+
     ! If diag_field_id is < 0 it means that this field is not registered, simply return
     IF ( diag_field_id <= 0 ) THEN
        send_data_3d = .FALSE.
@@ -1497,6 +1508,23 @@ CONTAINS
 !!$       first_send_data_call = .FALSE.
 !!$    END IF
 
+    ! First copy the data to a three d array
+    ALLOCATE(field_out(SIZE(field,1),SIZE(field,2),SIZE(field,3)), STAT=status)
+    IF ( status .NE. 0 ) THEN
+       WRITE (err_msg_local, FMT='("Unable to allocate field_out(",I5,",",I5,",",I5,"). (STAT: ",I5,")")')&
+            & SIZE(field,1), SIZE(field,2), SIZE(field,3), status
+       IF ( fms_error_handler('diag_manager_mod::send_data_3d', err_msg_local, err_msg) ) RETURN
+    END IF
+    SELECT TYPE (field)
+    TYPE IS (real(kind=r4_kind))
+       field_out = field
+    TYPE IS (real(kind=r8_kind))
+       field_out = real(field)
+    CLASS DEFAULT
+       CALL error_mesg ('diag_manager_mod::send_data_3d',&
+            & 'The field is not one of the supported types of real(kind=4) or real(kind=8)', FATAL)
+    END SELECT
+
     ! oor_mask is only used for checking out of range values.
     ALLOCATE(oor_mask(SIZE(field,1),SIZE(field,2),SIZE(field,3)), STAT=status)
     IF ( status .NE. 0 ) THEN
@@ -1510,7 +1538,18 @@ CONTAINS
     ELSE
        oor_mask = .TRUE.
     END IF
-    IF ( PRESENT(rmask) ) WHERE ( rmask < 0.5 ) oor_mask = .FALSE.
+
+    IF ( PRESENT(rmask) ) THEN
+       SELECT TYPE (rmask)
+       TYPE IS (real(kind=r4_kind))
+          WHERE ( rmask < 0.5_r4_kind ) oor_mask = .FALSE.
+       TYPE IS (real(kind=r8_kind))
+          WHERE ( rmask < 0.5_r8_kind ) oor_mask = .FALSE.
+       CLASS DEFAULT
+          CALL error_mesg ('diag_manager_mod::send_data_3d',&
+               & 'The rmask is not one of the supported types of real(kind=4) or real(kind=8)', FATAL)
+       END SELECT
+    END IF
 
     ! send_data works in either one or another of two modes.
     ! 1. Input field is a window (e.g. FMS physics)
@@ -1526,6 +1565,7 @@ CONTAINS
     IF ( PRESENT(ie_in) ) THEN
        IF ( .NOT.PRESENT(is_in) ) THEN
           IF ( fms_error_handler('diag_manager_mod::send_data_3d', 'ie_in present without is_in', err_msg) ) THEN
+             DEALLOCATE(field_out)
              DEALLOCATE(oor_mask)
              RETURN
           END IF
@@ -1533,6 +1573,7 @@ CONTAINS
        IF ( PRESENT(js_in) .AND. .NOT.PRESENT(je_in) ) THEN
           IF ( fms_error_handler('diag_manager_modsend_data_3d',&
                & 'is_in and ie_in present, but js_in present without je_in', err_msg) ) THEN
+             DEALLOCATE(field_out)
              DEALLOCATE(oor_mask)
              RETURN
           END IF
@@ -1541,6 +1582,7 @@ CONTAINS
     IF ( PRESENT(je_in) ) THEN
        IF ( .NOT.PRESENT(js_in) ) THEN
           IF ( fms_error_handler('diag_manager_mod::send_data_3d', 'je_in present without js_in', err_msg) ) THEN
+             DEALLOCATE(field_out)
              DEALLOCATE(oor_mask)
              RETURN
           END IF
@@ -1548,6 +1590,7 @@ CONTAINS
        IF ( PRESENT(is_in) .AND. .NOT.PRESENT(ie_in) ) THEN
           IF ( fms_error_handler('diag_manager_mod::send_data_3d',&
                & 'js_in and je_in present, but is_in present without ie_in', err_msg)) THEN
+             DEALLOCATE(field_out)
              DEALLOCATE(oor_mask)
              RETURN
           END IF
@@ -1572,14 +1615,18 @@ CONTAINS
     IF ( PRESENT(ke_in) ) ke = ke_in
     twohi = n1-(ie-is+1)
     IF ( MOD(twohi,2) /= 0 ) THEN
-       IF ( fms_error_handler('diag_manager_mod::send_data_3d', 'non-symmetric halos in first dimension', err_msg) ) THEN
+       IF ( fms_error_handler('diag_manager_mod::send_data_3d', 'non-symmetric halos in first dimension', &
+          & err_msg) ) THEN
+          DEALLOCATE(field_out)
           DEALLOCATE(oor_mask)
           RETURN
        END IF
     END IF
     twohj = n2-(je-js+1)
     IF ( MOD(twohj,2) /= 0 ) THEN
-       IF ( fms_error_handler('diag_manager_mod::send_data_3d', 'non-symmetric halos in second dimension', err_msg) ) THEN
+       IF ( fms_error_handler('diag_manager_mod::send_data_3d', 'non-symmetric halos in second dimension', &
+          & err_msg) ) THEN
+          DEALLOCATE(field_out)
           DEALLOCATE(oor_mask)
           RETURN
        END IF
@@ -1604,7 +1651,15 @@ CONTAINS
 
     ! weight is for time averaging where each time level may has a different weight
     IF ( PRESENT(weight) ) THEN
-       weight1 = weight
+       SELECT TYPE (weight)
+       TYPE IS (real(kind=r4_kind))
+          weight1 = weight
+       TYPE IS (real(kind=r8_kind))
+          weight1 = real(weight)
+       CLASS DEFAULT
+          CALL error_mesg ('diag_manager_mod::send_data_3d',&
+               & 'The weight is not one of the supported types of real(kind=4) or real(kind=8)', FATAL)
+       END SELECT
     ELSE
        weight1 = 1.
     END IF
@@ -1633,13 +1688,13 @@ CONTAINS
           WRITE (error_string, '("[",ES14.5E3,",",ES14.5E3,"]")')&
                & input_fields(diag_field_id)%range(1:2)
           WRITE (error_string1, '("(Min: ",ES14.5E3,", Max: ",ES14.5E3, ")")')&
-                  & MINVAL(field(f1:f2,f3:f4,ks:ke),MASK=oor_mask(f1:f2,f3:f4,ks:ke)),&
-                  & MAXVAL(field(f1:f2,f3:f4,ks:ke),MASK=oor_mask(f1:f2,f3:f4,ks:ke))
+                  & MINVAL(field_out(f1:f2,f3:f4,ks:ke),MASK=oor_mask(f1:f2,f3:f4,ks:ke)),&
+                  & MAXVAL(field_out(f1:f2,f3:f4,ks:ke),MASK=oor_mask(f1:f2,f3:f4,ks:ke))
           IF ( missvalue_present ) THEN
              IF ( ANY(oor_mask(f1:f2,f3:f4,ks:ke) .AND.&
-                  &   ((field(f1:f2,f3:f4,ks:ke) < input_fields(diag_field_id)%range(1) .OR.&
-                  &     field(f1:f2,f3:f4,ks:ke) > input_fields(diag_field_id)%range(2)).AND.&
-                  &     field(f1:f2,f3:f4,ks:ke) .NE. missvalue)) ) THEN
+                  &   ((field_out(f1:f2,f3:f4,ks:ke) < input_fields(diag_field_id)%range(1) .OR.&
+                  &     field_out(f1:f2,f3:f4,ks:ke) > input_fields(diag_field_id)%range(2)).AND.&
+                  &     field_out(f1:f2,f3:f4,ks:ke) .NE. missvalue)) ) THEN
                 ! <ERROR STATUS="WARNING/FATAL">
                 !   A value for <module_name> in field <field_name> (Min: <min_val>, Max: <max_val>)
                 !   is outside the range [<lower_val>,<upper_val>] and not equal to the missing
@@ -1656,8 +1711,8 @@ CONTAINS
              END IF
           ELSE
              IF ( ANY(oor_mask(f1:f2,f3:f4,ks:ke) .AND.&
-                  &   (field(f1:f2,f3:f4,ks:ke) < input_fields(diag_field_id)%range(1) .OR.&
-                  &    field(f1:f2,f3:f4,ks:ke) > input_fields(diag_field_id)%range(2))) ) THEN
+                  &   (field_out(f1:f2,f3:f4,ks:ke) < input_fields(diag_field_id)%range(1) .OR.&
+                  &    field_out(f1:f2,f3:f4,ks:ke) > input_fields(diag_field_id)%range(2))) ) THEN
                 ! <ERROR STATUS="WARNING/FATAL">
                 !   A value for <module_name> in field <field_name> (Min: <min_val>, Max: <max_val>)
                 !   is outside the range [<lower_val>,<upper_val>].
@@ -1707,7 +1762,7 @@ CONTAINS
        time_min = output_fields(out_num)%time_min
        ! Sum output over time interval
        time_sum = output_fields(out_num)%time_sum
-       IF ( output_fields(out_num)%total_elements > SIZE(field(f1:f2,f3:f4,ks:ke)) ) THEN
+       IF ( output_fields(out_num)%total_elements > SIZE(field_out(f1:f2,f3:f4,ks:ke)) ) THEN
           output_fields(out_num)%phys_window = .TRUE.
        ELSE
           output_fields(out_num)%phys_window = .FALSE.
@@ -1722,7 +1777,8 @@ CONTAINS
        sample = 1
        IF ( PRESENT(time) ) THEN
           CALL get_time(time,second,day,tick) ! current date
-          sample = floor((second+real(tick)/get_ticks_per_second())*output_fields(out_num)%n_diurnal_samples/SECONDS_PER_DAY) + 1
+          sample = floor( (second+real(tick)/get_ticks_per_second()) &
+                       & * output_fields(out_num)%n_diurnal_samples/SECONDS_PER_DAY) + 1
        END IF
 
        ! Get the vertical layer start and end index.
@@ -1751,6 +1807,7 @@ CONTAINS
                      & TRIM(output_fields(out_num)%output_name)
                 IF ( fms_error_handler('diag_manager_mod::send_data_3d', 'module/output_field '//TRIM(error_string)//&
                      & ', time must be present when output frequency = EVERY_TIME', err_msg)) THEN
+                   DEALLOCATE(field_out)
                    DEALLOCATE(oor_mask)
                    RETURN
                 END IF
@@ -1763,6 +1820,7 @@ CONTAINS
                & TRIM(output_fields(out_num)%output_name)
           IF ( fms_error_handler('diag_manager_mod::send_data_3d', 'module/output_field '//TRIM(error_string)//&
                & ', time must be present for nonstatic field', err_msg)) THEN
+             DEALLOCATE(field_out)
              DEALLOCATE(oor_mask)
              RETURN
           END IF
@@ -1780,8 +1838,9 @@ CONTAINS
                       WRITE (error_string,'(a,"/",a)')&
                            & TRIM(input_fields(diag_field_id)%module_name), &
                            & TRIM(output_fields(out_num)%output_name)
-                      IF ( fms_error_handler('diag_manager_mod::send_data_3d', 'module/output_field '//TRIM(error_string)//&
-                           & ' is skipped one time level in output data', err_msg)) THEN
+                      IF ( fms_error_handler('diag_manager_mod::send_data_3d', 'module/output_field '//&
+                           & TRIM(error_string)//' is skipped one time level in output data', err_msg)) THEN
+                         DEALLOCATE(field_out)
                          DEALLOCATE(oor_mask)
                          RETURN
                       END IF
@@ -1791,8 +1850,9 @@ CONTAINS
                 status = writing_field(out_num, .FALSE., error_string, time)
                 IF(status == -1) THEN
                    IF ( mpp_pe() .EQ. mpp_root_pe() ) THEN
-                      IF(fms_error_handler('diag_manager_mod::send_data_3d','module/output_field '//TRIM(error_string)//&
-                           & ', write EMPTY buffer', err_msg)) THEN
+                      IF(fms_error_handler('diag_manager_mod::send_data_3d','module/output_field '//TRIM(error_string)&
+                           & //', write EMPTY buffer', err_msg)) THEN
+                         DEALLOCATE(field_out)
                          DEALLOCATE(oor_mask)
                          RETURN
                       END IF
@@ -1807,6 +1867,7 @@ CONTAINS
           CALL check_bounds_are_exact_dynamic(out_num, diag_field_id, Time, err_msg=err_msg_local)
           IF ( err_msg_local /= '' ) THEN
              IF ( fms_error_handler('diag_manager_mod::send_data_3d', err_msg_local, err_msg) ) THEN
+                DEALLOCATE(field_out)
                 DEALLOCATE(oor_mask)
                 RETURN
              END IF
@@ -1822,6 +1883,7 @@ CONTAINS
                      & TRIM(output_fields(out_num)%output_name)
                 IF ( fms_error_handler('diag_manager_mod::send_data_3d', 'module/output_field '//TRIM(error_string)//&
                      & ', regional output NOT supported with mask_variant', err_msg)) THEN
+                   DEALLOCATE(field_out)
                    DEALLOCATE(oor_mask)
                    RETURN
                 END IF
@@ -1836,6 +1898,7 @@ CONTAINS
                       CALL check_out_of_bounds(out_num, diag_field_id, err_msg=err_msg_local)
                       IF ( err_msg_local /= '' ) THEN
                          IF ( fms_error_handler('diag_manager_mod::send_data_3d', err_msg_local, err_msg) ) THEN
+                            DEALLOCATE(field_out)
                             DEALLOCATE(oor_mask)
                             RETURN
                          END IF
@@ -1851,11 +1914,11 @@ CONTAINS
                                      IF ( pow_value /= 1 ) THEN
                                         output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) +&
-                                             & (field(i-is+1+hi, j-js+1+hj, k) * weight1)**(pow_value)
+                                             & (field_out(i-is+1+hi, j-js+1+hj, k) * weight1)**(pow_value)
                                      ELSE
                                         output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) +&
-                                             & field(i-is+1+hi, j-js+1+hj, k) * weight1
+                                             & field_out(i-is+1+hi, j-js+1+hj, k) * weight1
                                      END IF
                                      output_fields(out_num)%counter(i-hi,j-hj,k1,sample) =&
                                           & output_fields(out_num)%counter(i-hi,j-hj,k1,sample) + weight1
@@ -1871,11 +1934,11 @@ CONTAINS
                                      IF ( pow_value /= 1 ) THEN
                                         output_fields(out_num)%buffer(i-hi,j-hj,k,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k,sample) +&
-                                             & (field(i-is+1+hi,j-js+1+hj,k)*weight1)**(pow_value)
+                                             & (field_out(i-is+1+hi,j-js+1+hj,k)*weight1)**(pow_value)
                                      ELSE
                                         output_fields(out_num)%buffer(i-hi,j-hj,k,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k,sample) +&
-                                             & field(i-is+1+hi,j-js+1+hj,k)*weight1
+                                             & field_out(i-is+1+hi,j-js+1+hj,k)*weight1
                                      END IF
                                      output_fields(out_num)%counter(i-hi,j-hj,k,sample) =&
                                           &output_fields(out_num)%counter(i-hi,j-hj,k,sample) + weight1
@@ -1895,11 +1958,11 @@ CONTAINS
                                      IF ( pow_value /= 1 ) THEN
                                         output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) +&
-                                             & (field(i-is+1+hi, j-js+1+hj, k) * weight1)**(pow_value)
+                                             & (field_out(i-is+1+hi, j-js+1+hj, k) * weight1)**(pow_value)
                                      ELSE
                                         output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) +&
-                                             & field(i-is+1+hi, j-js+1+hj, k) * weight1
+                                             & field_out(i-is+1+hi, j-js+1+hj, k) * weight1
                                      END IF
                                      output_fields(out_num)%counter(i-hi,j-hj,k1,sample) =&
                                           & output_fields(out_num)%counter(i-hi,j-hj,k1,sample) + weight1
@@ -1915,11 +1978,11 @@ CONTAINS
                                      IF ( pow_value /= 1 ) THEN
                                         output_fields(out_num)%buffer(i-hi,j-hj,k,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k,sample) +&
-                                             & (field(i-is+1+hi,j-js+1+hj,k)*weight1)**(pow_value)
+                                             & (field_out(i-is+1+hi,j-js+1+hj,k)*weight1)**(pow_value)
                                      ELSE
                                         output_fields(out_num)%buffer(i-hi,j-hj,k,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k,sample) +&
-                                             & field(i-is+1+hi,j-js+1+hj,k)*weight1
+                                             & field_out(i-is+1+hi,j-js+1+hj,k)*weight1
                                      END IF
                                      output_fields(out_num)%counter(i-hi,j-hj,k,sample) =&
                                           &output_fields(out_num)%counter(i-hi,j-hj,k,sample) + weight1
@@ -1934,8 +1997,9 @@ CONTAINS
                    WRITE (error_string,'(a,"/",a)')&
                         & TRIM(input_fields(diag_field_id)%module_name), &
                         & TRIM(output_fields(out_num)%output_name)
-                   IF ( fms_error_handler('diag_manager_mod::send_data_3d', 'module/output_field '//TRIM(error_string)//&
+                   IF(fms_error_handler('diag_manager_mod::send_data_3d', 'module/output_field '//TRIM(error_string)//&
                         & ', variable mask but no missing value defined', err_msg)) THEN
+                      DEALLOCATE(field_out)
                       DEALLOCATE(oor_mask)
                       RETURN
                    END IF
@@ -1946,6 +2010,7 @@ CONTAINS
                      & TRIM(output_fields(out_num)%output_name)
                 IF(fms_error_handler('diag_manager_mod::send_data_3d','module/output_field '//TRIM(error_string)//&
                      & ', variable mask but no mask given', err_msg)) THEN
+                   DEALLOCATE(field_out)
                    DEALLOCATE(oor_mask)
                    RETURN
                 END IF
@@ -1959,18 +2024,19 @@ CONTAINS
                             k1 = k-l_start(3)+1
                             DO j = js, je
                                DO i = is, ie
-                                  IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                                  IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. &
+                                     & j <= l_end(2)+hj ) THEN
                                      i1 = i-l_start(1)-hi+1
                                      j1=  j-l_start(2)-hj+1
                                      IF ( mask(i-is+1+hi, j-js+1+hj, k) ) THEN
                                         IF ( pow_value /= 1 ) THEN
                                            output_fields(out_num)%buffer(i1,j1,k1,sample) =&
                                                 & output_fields(out_num)%buffer(i1,j1,k1,sample) +&
-                                                & (field(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
+                                                & (field_out(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
                                         ELSE
                                            output_fields(out_num)%buffer(i1,j1,k1,sample) =&
                                                 & output_fields(out_num)%buffer(i1,j1,k1,sample) +&
-                                                & field(i-is+1+hi,j-js+1+hj,k) * weight1
+                                                & field_out(i-is+1+hi,j-js+1+hj,k) * weight1
                                         END IF
                                      ELSE
                                         output_fields(out_num)%buffer(i1,j1,k1,sample) = missvalue
@@ -1985,18 +2051,19 @@ CONTAINS
                             k1 = k-l_start(3)+1
                             DO j = js, je
                                DO i = is, ie
-                                  IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                                  IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. &
+                                     & j <= l_end(2)+hj ) THEN
                                      i1 = i-l_start(1)-hi+1
                                      j1=  j-l_start(2)-hj+1
                                      IF ( mask(i-is+1+hi, j-js+1+hj, k) ) THEN
                                         IF ( pow_value /= 1 ) THEN
                                            output_fields(out_num)%buffer(i1,j1,k1,sample) =&
                                                 & output_fields(out_num)%buffer(i1,j1,k1,sample) +&
-                                                & (field(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
+                                                & (field_out(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
                                         ELSE
                                            output_fields(out_num)%buffer(i1,j1,k1,sample) =&
                                                 & output_fields(out_num)%buffer(i1,j1,k1,sample) +&
-                                                & field(i-is+1+hi,j-js+1+hj,k) * weight1
+                                                & field_out(i-is+1+hi,j-js+1+hj,k) * weight1
                                         END IF
                                      ELSE
                                         output_fields(out_num)%buffer(i1,j1,k1,sample) = missvalue
@@ -2010,7 +2077,8 @@ CONTAINS
 !$OMP CRITICAL
                       DO j = js, je
                          DO i = is, ie
-                            IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                            IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. &
+                               & j <= l_end(2)+hj ) THEN
                                output_fields(out_num)%num_elements(sample) = &
                                     output_fields(out_num)%num_elements(sample) + l_end(3) - l_start(3) + 1
                             END IF
@@ -2027,11 +2095,11 @@ CONTAINS
                                      IF ( pow_value /= 1 ) THEN
                                         output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) +&
-                                             & (field(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
+                                             & (field_out(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
                                      ELSE
                                         output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) +&
-                                             & field(i-is+1+hi,j-js+1+hj,k) * weight1
+                                             & field_out(i-is+1+hi,j-js+1+hj,k) * weight1
                                      END IF
                                   ELSE
                                      output_fields(out_num)%buffer(i-hi,j-hj,k1,sample)= missvalue
@@ -2049,11 +2117,11 @@ CONTAINS
                                      IF ( pow_value /= 1 ) THEN
                                         output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) +&
-                                             & (field(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
+                                             & (field_out(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
                                      ELSE
                                         output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) +&
-                                             & field(i-is+1+hi,j-js+1+hj,k) * weight1
+                                             & field_out(i-is+1+hi,j-js+1+hj,k) * weight1
                                      END IF
                                   ELSE
                                      output_fields(out_num)%buffer(i-hi,j-hj,k1,sample)= missvalue
@@ -2069,6 +2137,7 @@ CONTAINS
                          CALL check_out_of_bounds(out_num, diag_field_id, err_msg=err_msg_local)
                          IF ( err_msg_local /= '' ) THEN
                             IF ( fms_error_handler('diag_manager_mod::send_data_3d', err_msg_local, err_msg) ) THEN
+                               DEALLOCATE(field_out)
                                DEALLOCATE(oor_mask)
                                RETURN
                             END IF
@@ -2082,11 +2151,11 @@ CONTAINS
                                      IF ( pow_value /= 1 ) THEN
                                         output_fields(out_num)%buffer(i-hi,j-hj,k,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k,sample) +&
-                                             & (field(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
+                                             & (field_out(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
                                      ELSE
                                         output_fields(out_num)%buffer(i-hi,j-hj,k,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k,sample) +&
-                                             & field(i-is+1+hi,j-js+1+hj,k) * weight1
+                                             & field_out(i-is+1+hi,j-js+1+hj,k) * weight1
                                      END IF
                                   ELSE
                                      output_fields(out_num)%buffer(i-hi,j-hj,k,sample)= missvalue
@@ -2103,11 +2172,11 @@ CONTAINS
                                      IF ( pow_value /= 1 ) THEN
                                         output_fields(out_num)%buffer(i-hi,j-hj,k,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k,sample) +&
-                                             & (field(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
+                                             & (field_out(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
                                      ELSE
                                         output_fields(out_num)%buffer(i-hi,j-hj,k,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k,sample) +&
-                                             & field(i-is+1+hi,j-js+1+hj,k) * weight1
+                                             & field_out(i-is+1+hi,j-js+1+hj,k) * weight1
                                      END IF
                                   ELSE
                                      output_fields(out_num)%buffer(i-hi,j-hj,k,sample)= missvalue
@@ -2146,16 +2215,19 @@ CONTAINS
                       IF (numthreads>1 .AND. phys_window) then
                          DO j = js, je
                             DO i = is, ie
-                               IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                               IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. &
+                                  & j <= l_end(2)+hj ) THEN
                                   i1 = i-l_start(1)-hi+1
                                   j1 =  j-l_start(2)-hj+1
                                   IF ( pow_value /= 1 ) THEN
-                                     output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample)+ &
-                                          & (field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1)**(pow_value)
+                                     output_fields(out_num)%buffer(i1,j1,:,sample)= &
+                                          & output_fields(out_num)%buffer(i1,j1,:,sample)+ &
+                                          & (field_out(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1)**(pow_value)
                                   ELSE
-                                     output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample)+ &
-                                          & field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1
-                               END IF
+                                     output_fields(out_num)%buffer(i1,j1,:,sample)= &
+                                          & output_fields(out_num)%buffer(i1,j1,:,sample)+ &
+                                          & field_out(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1
+                                  END IF
                                END IF
                             END DO
                          END DO
@@ -2163,16 +2235,19 @@ CONTAINS
 !$OMP CRITICAL
                          DO j = js, je
                             DO i = is, ie
-                               IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                               IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. &
+                                  & j <= l_end(2)+hj ) THEN
                                   i1 = i-l_start(1)-hi+1
                                   j1 =  j-l_start(2)-hj+1
                                   IF ( pow_value /= 1 ) THEN
-                                     output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample)+ &
-                                          & (field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1)**(pow_value)
+                                     output_fields(out_num)%buffer(i1,j1,:,sample)= &
+                                          & output_fields(out_num)%buffer(i1,j1,:,sample)+ &
+                                          & (field_out(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1)**(pow_value)
                                   ELSE
-                                     output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample)+ &
-                                          & field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1
-                               END IF
+                                     output_fields(out_num)%buffer(i1,j1,:,sample)= &
+                                          & output_fields(out_num)%buffer(i1,j1,:,sample)+ &
+                                          & field_out(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1
+                                  END IF
                                END IF
                             END DO
                          END DO
@@ -2181,7 +2256,8 @@ CONTAINS
 !$OMP CRITICAL
                       DO j = js, je
                          DO i = is, ie
-                            IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                            IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. &
+                               & j <= l_end(2)+hj ) THEN
                                output_fields(out_num)%num_elements(sample)=&
                                     & output_fields(out_num)%num_elements(sample)+l_end(3)-l_start(3)+1
 
@@ -2196,11 +2272,11 @@ CONTAINS
                          IF ( pow_value /= 1 ) THEN
                             output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) =&
                                  & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) +&
-                                 & (field(f1:f2,f3:f4,ksr:ker)*weight1)**(pow_value)
+                                 & (field_out(f1:f2,f3:f4,ksr:ker)*weight1)**(pow_value)
                          ELSE
                             output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) =&
                                  & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) +&
-                                 & field(f1:f2,f3:f4,ksr:ker)*weight1
+                                 & field_out(f1:f2,f3:f4,ksr:ker)*weight1
                          END IF
                       ELSE
 !$OMP CRITICAL
@@ -2209,11 +2285,11 @@ CONTAINS
                          IF ( pow_value /= 1 ) THEN
                             output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) =&
                                  & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) +&
-                                 & (field(f1:f2,f3:f4,ksr:ker)*weight1)**(pow_value)
+                                 & (field_out(f1:f2,f3:f4,ksr:ker)*weight1)**(pow_value)
                          ELSE
                             output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) =&
                                  & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) +&
-                                 & field(f1:f2,f3:f4,ksr:ker)*weight1
+                                 & field_out(f1:f2,f3:f4,ksr:ker)*weight1
                          END IF
 !$OMP END CRITICAL
                       END IF
@@ -2223,6 +2299,7 @@ CONTAINS
                          CALL check_out_of_bounds(out_num, diag_field_id, err_msg=err_msg_local)
                          IF ( err_msg_local /= '') THEN
                             IF ( fms_error_handler('diag_manager_mod::send_data_3d', err_msg_local, err_msg) ) THEN
+                               DEALLOCATE(field_out)
                                DEALLOCATE(oor_mask)
                                RETURN
                             END IF
@@ -2232,22 +2309,22 @@ CONTAINS
                          IF ( pow_value /= 1 ) THEN
                             output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) =&
                                  & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) +&
-                                 & (field(f1:f2,f3:f4,ks:ke)*weight1)**(pow_value)
+                                 & (field_out(f1:f2,f3:f4,ks:ke)*weight1)**(pow_value)
                          ELSE
                             output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) =&
                                  & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) +&
-                                 & field(f1:f2,f3:f4,ks:ke)*weight1
+                                 & field_out(f1:f2,f3:f4,ks:ke)*weight1
                          END IF
                       ELSE
 !$OMP CRITICAL
                          IF ( pow_value /= 1 ) THEN
                             output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) =&
                                  & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) +&
-                                 & (field(f1:f2,f3:f4,ks:ke)*weight1)**(pow_value)
+                                 & (field_out(f1:f2,f3:f4,ks:ke)*weight1)**(pow_value)
                          ELSE
                             output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) =&
                                  & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) +&
-                                 & field(f1:f2,f3:f4,ks:ke)*weight1
+                                 & field_out(f1:f2,f3:f4,ks:ke)*weight1
                          END IF
 !$OMP END CRITICAL
                       END IF
@@ -2265,18 +2342,19 @@ CONTAINS
                             k1 = k - l_start(3) + 1
                             DO j = js, je
                                DO i = is, ie
-                                  IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj) THEN
+                                  IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. &
+                                     & j <= l_end(2)+hj) THEN
                                      i1 = i-l_start(1)-hi+1
                                      j1=  j-l_start(2)-hj+1
-                                     IF ( field(i-is+1+hi,j-js+1+hj,k) /= missvalue ) THEN
+                                     IF ( field_out(i-is+1+hi,j-js+1+hj,k) /= missvalue ) THEN
                                         IF ( pow_value /= 1 ) THEN
                                            output_fields(out_num)%buffer(i1,j1,k1,sample) =&
                                                 & output_fields(out_num)%buffer(i1,j1,k1,sample) +&
-                                                & (field(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
+                                                & (field_out(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
                                         ELSE
                                            output_fields(out_num)%buffer(i1,j1,k1,sample) =&
                                                 & output_fields(out_num)%buffer(i1,j1,k1,sample) +&
-                                                & field(i-is+1+hi,j-js+1+hj,k) * weight1
+                                                & field_out(i-is+1+hi,j-js+1+hj,k) * weight1
                                         END IF
                                      ELSE
                                         output_fields(out_num)%buffer(i1,j1,k1,sample) = missvalue
@@ -2291,18 +2369,19 @@ CONTAINS
                             k1 = k - l_start(3) + 1
                             DO j = js, je
                                DO i = is, ie
-                                  IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj) THEN
+                                  IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. &
+                                     & j <= l_end(2)+hj) THEN
                                      i1 = i-l_start(1)-hi+1
                                      j1=  j-l_start(2)-hj+1
-                                     IF ( field(i-is+1+hi,j-js+1+hj,k) /= missvalue ) THEN
+                                     IF ( field_out(i-is+1+hi,j-js+1+hj,k) /= missvalue ) THEN
                                         IF ( pow_value /= 1 ) THEN
                                            output_fields(out_num)%buffer(i1,j1,k1,sample) =&
                                                 & output_fields(out_num)%buffer(i1,j1,k1,sample) +&
-                                                & (field(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
+                                                & (field_out(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
                                         ELSE
                                            output_fields(out_num)%buffer(i1,j1,k1,sample) =&
                                                 & output_fields(out_num)%buffer(i1,j1,k1,sample) +&
-                                                & field(i-is+1+hi,j-js+1+hj,k) * weight1
+                                                & field_out(i-is+1+hi,j-js+1+hj,k) * weight1
                                         END IF
                                      ELSE
                                         output_fields(out_num)%buffer(i1,j1,k1,sample) = missvalue
@@ -2316,7 +2395,8 @@ CONTAINS
 !$OMP CRITICAL
                       DO j = js, je
                          DO i = is, ie
-                            IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj) THEN
+                            IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. &
+                               & j <= l_end(2)+hj) THEN
                                output_fields(out_num)%num_elements(sample) =&
                                     & output_fields(out_num)%num_elements(sample) + l_end(3) - l_start(3) + 1
                             END IF
@@ -2326,8 +2406,9 @@ CONTAINS
                          outer0: DO k = l_start(3), l_end(3)
                             DO j=l_start(2)+hj, l_end(2)+hj
                                DO i=l_start(1)+hi, l_end(1)+hi
-                                  IF ( field(i,j,k) /= missvalue ) THEN
-                                     output_fields(out_num)%count_0d(sample) = output_fields(out_num)%count_0d(sample) + weight1
+                                  IF ( field_out(i,j,k) /= missvalue ) THEN
+                                     output_fields(out_num)%count_0d(sample) = output_fields(out_num)%count_0d(sample)&
+                                                                             & + weight1
                                      EXIT outer0
                                   END IF
                                END DO
@@ -2343,15 +2424,15 @@ CONTAINS
                             k1 = k - ksr + 1
                             DO j=js, je
                                DO i=is, ie
-                                  IF ( field(i-is+1+hi,j-js+1+hj,k) /= missvalue ) THEN
+                                  IF ( field_out(i-is+1+hi,j-js+1+hj,k) /= missvalue ) THEN
                                      IF ( pow_value /= 1 ) THEN
                                         output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) +&
-                                             & (field(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
+                                             & (field_out(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
                                      ELSE
                                         output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) +&
-                                             & field(i-is+1+hi,j-js+1+hj,k) * weight1
+                                             & field_out(i-is+1+hi,j-js+1+hj,k) * weight1
                                      END IF
                                   ELSE
                                      output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) = missvalue
@@ -2367,15 +2448,15 @@ CONTAINS
                             k1 = k - ksr + 1
                             DO j=js, je
                                DO i=is, ie
-                                  IF ( field(i-is+1+hi,j-js+1+hj,k) /= missvalue ) THEN
+                                  IF ( field_out(i-is+1+hi,j-js+1+hj,k) /= missvalue ) THEN
                                      IF ( pow_value /= 1 ) THEN
                                         output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) +&
-                                             & (field(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
+                                             & (field_out(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
                                      ELSE
                                         output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) +&
-                                             & field(i-is+1+hi,j-js+1+hj,k) * weight1
+                                             & field_out(i-is+1+hi,j-js+1+hj,k) * weight1
                                      END IF
                                   ELSE
                                      output_fields(out_num)%buffer(i-hi,j-hj,k1,sample) = missvalue
@@ -2390,8 +2471,9 @@ CONTAINS
                          k1=k-ksr+1
                          DO j=f3, f4
                             DO i=f1, f2
-                               IF ( field(i,j,k) /= missvalue ) THEN
-                                  output_fields(out_num)%count_0d(sample) = output_fields(out_num)%count_0d(sample) + weight1
+                               IF ( field_out(i,j,k) /= missvalue ) THEN
+                                  output_fields(out_num)%count_0d(sample) = output_fields(out_num)%count_0d(sample) &
+                                                                          & + weight1
                                   EXIT outer3
                                END IF
                             END DO
@@ -2404,6 +2486,7 @@ CONTAINS
                          CALL check_out_of_bounds(out_num, diag_field_id, err_msg=err_msg_local)
                          IF ( err_msg_local /= '' ) THEN
                             IF ( fms_error_handler('diag_manager_mod::send_data_3d', err_msg_local, err_msg) ) THEN
+                               DEALLOCATE(field_out)
                                DEALLOCATE(oor_mask)
                                RETURN
                             END IF
@@ -2413,15 +2496,15 @@ CONTAINS
                          DO k=ks, ke
                             DO j=js, je
                                DO i=is, ie
-                                  IF ( field(i-is+1+hi,j-js+1+hj,k) /= missvalue )  THEN
+                                  IF ( field_out(i-is+1+hi,j-js+1+hj,k) /= missvalue )  THEN
                                      IF ( pow_value /= 1 ) THEN
                                         output_fields(out_num)%buffer(i-hi,j-hj,k,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k,sample) +&
-                                             & (field(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
+                                             & (field_out(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
                                      ELSE
                                         output_fields(out_num)%buffer(i-hi,j-hj,k,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k,sample) +&
-                                             & field(i-is+1+hi,j-js+1+hj,k) * weight1
+                                             & field_out(i-is+1+hi,j-js+1+hj,k) * weight1
                                      END IF
                                   ELSE
                                      output_fields(out_num)%buffer(i-hi,j-hj,k,sample) = missvalue
@@ -2434,15 +2517,15 @@ CONTAINS
                          DO k=ks, ke
                             DO j=js, je
                                DO i=is, ie
-                                  IF ( field(i-is+1+hi,j-js+1+hj,k) /= missvalue )  THEN
+                                  IF ( field_out(i-is+1+hi,j-js+1+hj,k) /= missvalue )  THEN
                                      IF ( pow_value /= 1 ) THEN
                                         output_fields(out_num)%buffer(i-hi,j-hj,k,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k,sample) +&
-                                             & (field(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
+                                             & (field_out(i-is+1+hi,j-js+1+hj,k) * weight1)**(pow_value)
                                      ELSE
                                         output_fields(out_num)%buffer(i-hi,j-hj,k,sample) =&
                                              & output_fields(out_num)%buffer(i-hi,j-hj,k,sample) +&
-                                             & field(i-is+1+hi,j-js+1+hj,k) * weight1
+                                             & field_out(i-is+1+hi,j-js+1+hj,k) * weight1
                                      END IF
                                   ELSE
                                      output_fields(out_num)%buffer(i-hi,j-hj,k,sample) = missvalue
@@ -2456,8 +2539,9 @@ CONTAINS
                       outer1: DO k=ks, ke
                          DO j=f3, f4
                             DO i=f1, f2
-                               IF ( field(i,j,k) /= missvalue ) THEN
-                                  output_fields(out_num)%count_0d(sample) = output_fields(out_num)%count_0d(sample) + weight1
+                               IF ( field_out(i,j,k) /= missvalue ) THEN
+                                  output_fields(out_num)%count_0d(sample) = output_fields(out_num)%count_0d(sample) &
+                                                                          & + weight1
                                   EXIT outer1
                                END IF
                             END DO
@@ -2470,16 +2554,19 @@ CONTAINS
                       IF( numthreads > 1 .AND. phys_window ) then
                          DO j = js, je
                             DO i = is, ie
-                               IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                               IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. &
+                                  & j <= l_end(2)+hj ) THEN
                                   i1 = i-l_start(1)-hi+1
                                   j1=  j-l_start(2)-hj+1
                                   IF ( pow_value /= 1 ) THEN
-                                     output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample) +&
-                                          & (field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1)**(pow_value)
+                                     output_fields(out_num)%buffer(i1,j1,:,sample)= &
+                                          & output_fields(out_num)%buffer(i1,j1,:,sample) +&
+                                          & (field_out(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1)**(pow_value)
                                   ELSE
-                                     output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample) +&
-                                          & field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1
-                               END IF
+                                     output_fields(out_num)%buffer(i1,j1,:,sample)= &
+                                          & output_fields(out_num)%buffer(i1,j1,:,sample) +&
+                                          & field_out(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1
+                                  END IF
                                END IF
                             END DO
                          END DO
@@ -2487,16 +2574,19 @@ CONTAINS
 !$OMP CRITICAL
                          DO j = js, je
                             DO i = is, ie
-                               IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                               IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. &
+                                  & j <= l_end(2)+hj ) THEN
                                   i1 = i-l_start(1)-hi+1
                                   j1=  j-l_start(2)-hj+1
                                   IF ( pow_value /= 1 ) THEN
-                                     output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample) +&
-                                          & (field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1)**(pow_value)
+                                     output_fields(out_num)%buffer(i1,j1,:,sample)= &
+                                          & output_fields(out_num)%buffer(i1,j1,:,sample) +&
+                                          & (field_out(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1)**(pow_value)
                                   ELSE
-                                     output_fields(out_num)%buffer(i1,j1,:,sample)= output_fields(out_num)%buffer(i1,j1,:,sample) +&
-                                          & field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1
-                               END IF
+                                     output_fields(out_num)%buffer(i1,j1,:,sample)= &
+                                          & output_fields(out_num)%buffer(i1,j1,:,sample) +&
+                                          & field_out(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))*weight1
+                                  END IF
                                END IF
                             END DO
                          END DO
@@ -2506,7 +2596,8 @@ CONTAINS
 !$OMP CRITICAL
                       DO j = js, je
                          DO i = is, ie
-                            IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                            IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. &
+                               & j <= l_end(2)+hj ) THEN
                                output_fields(out_num)%num_elements(sample) =&
                                     & output_fields(out_num)%num_elements(sample)+l_end(3)-l_start(3)+1
                             END IF
@@ -2521,22 +2612,22 @@ CONTAINS
                          IF ( pow_value /= 1 ) THEN
                             output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) =&
                                  & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) + &
-                                 & (field(f1:f2,f3:f4,ksr:ker)*weight1)**(pow_value)
+                                 & (field_out(f1:f2,f3:f4,ksr:ker)*weight1)**(pow_value)
                          ELSE
                             output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) =&
                                  & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) + &
-                                 & field(f1:f2,f3:f4,ksr:ker)*weight1
+                                 & field_out(f1:f2,f3:f4,ksr:ker)*weight1
                          END IF
                       ELSE
 !$OMP CRITICAL
                          IF ( pow_value /= 1 ) THEN
                             output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) =&
                                  & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) + &
-                                 & (field(f1:f2,f3:f4,ksr:ker)*weight1)**(pow_value)
+                                 & (field_out(f1:f2,f3:f4,ksr:ker)*weight1)**(pow_value)
                          ELSE
                             output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) =&
                                  & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) + &
-                                 & field(f1:f2,f3:f4,ksr:ker)*weight1
+                                 & field_out(f1:f2,f3:f4,ksr:ker)*weight1
                          END IF
 !$OMP END CRITICAL
                       END IF
@@ -2546,6 +2637,7 @@ CONTAINS
                          CALL check_out_of_bounds(out_num, diag_field_id, err_msg=err_msg_local)
                          IF ( err_msg_local /= '' ) THEN
                             IF ( fms_error_handler('diag_manager_mod::send_data_3d', err_msg_local, err_msg) ) THEN
+                               DEALLOCATE(field_out)
                                DEALLOCATE(oor_mask)
                                RETURN
                             END IF
@@ -2555,22 +2647,22 @@ CONTAINS
                          IF ( pow_value /= 1 ) THEN
                             output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) =&
                                  & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) +&
-                                 & (field(f1:f2,f3:f4,ks:ke)*weight1)**(pow_value)
+                                 & (field_out(f1:f2,f3:f4,ks:ke)*weight1)**(pow_value)
                          ELSE
                             output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) =&
                                  & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) +&
-                                 & field(f1:f2,f3:f4,ks:ke)*weight1
+                                 & field_out(f1:f2,f3:f4,ks:ke)*weight1
                          END IF
                       ELSE
 !$OMP CRITICAL
                          IF ( pow_value /= 1 ) THEN
                             output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) =&
                                  & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) +&
-                                 & (field(f1:f2,f3:f4,ks:ke)*weight1)**(pow_value)
+                                 & (field_out(f1:f2,f3:f4,ks:ke)*weight1)**(pow_value)
                          ELSE
                             output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) =&
                                  & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) +&
-                                 & field(f1:f2,f3:f4,ks:ke)*weight1
+                                 & field_out(f1:f2,f3:f4,ks:ke)*weight1
                          END IF
 !$OMP END CRITICAL
                       END IF
@@ -2598,12 +2690,13 @@ CONTAINS
                    k1 = k - l_start(3) + 1
                    DO j = js, je
                       DO i = is, ie
-                         IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                         IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. &
+                            & j <= l_end(2)+hj ) THEN
                             i1 = i-l_start(1)-hi+1
                             j1=  j-l_start(2)-hj+1
-                            IF ( mask(i-is+1+hi,j-js+1+hj,k) .AND.&
-                                 & field(i-is+1+hi,j-js+1+hj,k)>output_fields(out_num)%buffer(i1,j1,k1,sample)) THEN
-                               output_fields(out_num)%buffer(i1,j1,k1,sample) = field(i-is+1+hi,j-js+1+hj,k)
+                            IF ( mask(i-is+1+hi,j-js+1+hj,k) .AND. field_out(i-is+1+hi,j-js+1+hj,k)>&
+                               & output_fields(out_num)%buffer(i1,j1,k1,sample) ) THEN
+                               output_fields(out_num)%buffer(i1,j1,k1,sample) = field_out(i-is+1+hi,j-js+1+hj,k)
                             END IF
                          END IF
                       END DO
@@ -2613,23 +2706,24 @@ CONTAINS
              ELSE IF ( reduced_k_range ) THEN
                 ksr = l_start(3)
                 ker = l_end(3)
-                WHERE ( mask(f1:f2,f3:f4,ksr:ker) .AND. &
-                     & field(f1:f2,f3:f4,ksr:ker) > output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample))&
-                     & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) = field(f1:f2,f3:f4,ksr:ker)
+                WHERE ( mask(f1:f2,f3:f4,ksr:ker) .AND. field_out(f1:f2,f3:f4,ksr:ker) >&
+                      & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) )&
+                     & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) = field_out(f1:f2,f3:f4,ksr:ker)
              ELSE
                 IF ( debug_diag_manager ) THEN
                    CALL update_bounds(out_num, is-hi, ie-hi, js-hj, je-hj, ks, ke)
                    CALL check_out_of_bounds(out_num, diag_field_id, err_msg=err_msg_local)
                    IF ( err_msg_local /= '' ) THEN
                       IF ( fms_error_handler('diag_manager_mod::send_data_3d', err_msg_local, err_msg) ) THEN
+                         DEALLOCATE(field_out)
                          DEALLOCATE(oor_mask)
                          RETURN
                       END IF
                    END IF
                 END IF
-                WHERE ( mask(f1:f2,f3:f4,ks:ke) .AND.&
-                     & field(f1:f2,f3:f4,ks:ke)>output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample))&
-                     & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) = field(f1:f2,f3:f4,ks:ke)
+                WHERE ( mask(f1:f2,f3:f4,ks:ke) .AND. field_out(f1:f2,f3:f4,ks:ke)>&
+                      & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) )&
+                   & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) = field_out(f1:f2,f3:f4,ks:ke)
              END IF
           ELSE
              IF ( need_compute ) THEN
@@ -2637,11 +2731,12 @@ CONTAINS
                    k1 = k - l_start(3) + 1
                    DO j = js, je
                       DO i = is, ie
-                         IF(l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                         IF(l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. &
+                          & j <= l_end(2)+hj ) THEN
                             i1 = i-l_start(1)-hi+1
                             j1 =  j-l_start(2)-hj+1
-                            IF ( field(i-is+1+hi,j-js+1+hj,k) > output_fields(out_num)%buffer(i1,j1,k1,sample) ) THEN
-                               output_fields(out_num)%buffer(i1,j1,k1,sample) = field(i-is+1+hi,j-js+1+hj,k)
+                            IF ( field_out(i-is+1+hi,j-js+1+hj,k)>output_fields(out_num)%buffer(i1,j1,k1,sample) ) THEN
+                               output_fields(out_num)%buffer(i1,j1,k1,sample) = field_out(i-is+1+hi,j-js+1+hj,k)
                             END IF
                          END IF
                       END DO
@@ -2651,21 +2746,24 @@ CONTAINS
              ELSE IF ( reduced_k_range ) THEN
                 ksr = l_start(3)
                 ker = l_end(3)
-                WHERE ( field(f1:f2,f3:f4,ksr:ker) > output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) ) &
-                     & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) = field(f1:f2,f3:f4,ksr:ker)
+                WHERE ( field_out(f1:f2,f3:f4,ksr:ker) >&
+                      & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) ) &
+                   & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) = field_out(f1:f2,f3:f4,ksr:ker)
              ELSE
                 IF ( debug_diag_manager ) THEN
                    CALL update_bounds(out_num, is-hi, ie-hi, js-hj, je-hj, ks, ke)
                    CALL check_out_of_bounds(out_num, diag_field_id, err_msg=err_msg_local)
                    IF ( err_msg_local /= '' ) THEN
                       IF ( fms_error_handler('diag_manager_mod::send_data_3d', err_msg_local, err_msg) ) THEN
+                         DEALLOCATE(field_out)
                          DEALLOCATE(oor_mask)
                          RETURN
                       END IF
                    END IF
                 END IF
-                WHERE ( field(f1:f2,f3:f4,ks:ke) > output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) ) &
-                     & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) = field(f1:f2,f3:f4,ks:ke)
+                WHERE ( field_out(f1:f2,f3:f4,ks:ke) >&
+                      & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) ) &
+                   & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) = field_out(f1:f2,f3:f4,ks:ke)
              END IF
           END IF
           output_fields(out_num)%count_0d(sample) = 1
@@ -2676,12 +2774,13 @@ CONTAINS
                    k1 = k - l_start(3) + 1
                    DO j = js, je
                       DO i = is, ie
-                         IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                         IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. &
+                            & j <= l_end(2)+hj ) THEN
                             i1 = i-l_start(1)-hi+1
                             j1 =  j-l_start(2)-hj+1
-                            IF ( mask(i-is+1+hi,j-js+1+hj,k) .AND.&
-                                 & field(i-is+1+hi,j-js+1+hj,k) < output_fields(out_num)%buffer(i1,j1,k1,sample) ) THEN
-                               output_fields(out_num)%buffer(i1,j1,k1,sample) = field(i-is+1+hi,j-js+1+hj,k)
+                            IF ( mask(i-is+1+hi,j-js+1+hj,k) .AND. field_out(i-is+1+hi,j-js+1+hj,k) <&
+                               & output_fields(out_num)%buffer(i1,j1,k1,sample) ) THEN
+                               output_fields(out_num)%buffer(i1,j1,k1,sample) = field_out(i-is+1+hi,j-js+1+hj,k)
                             END IF
                          END IF
                       END DO
@@ -2691,23 +2790,24 @@ CONTAINS
              ELSE IF ( reduced_k_range ) THEN
                 ksr= l_start(3)
                 ker= l_end(3)
-                WHERE ( mask(f1:f2,f3:f4,ksr:ker) .AND.&
-                     & field(f1:f2,f3:f4,ksr:ker) < output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample)) &
-                     & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) = field(f1:f2,f3:f4,ksr:ker)
+                WHERE ( mask(f1:f2,f3:f4,ksr:ker) .AND. field_out(f1:f2,f3:f4,ksr:ker) <&
+                      & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) ) &
+                   & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) = field_out(f1:f2,f3:f4,ksr:ker)
              ELSE
                 IF ( debug_diag_manager ) THEN
                    CALL update_bounds(out_num, is-hi, ie-hi, js-hj, je-hj, ks, ke)
                    CALL check_out_of_bounds(out_num, diag_field_id, err_msg=err_msg_local)
                    IF ( err_msg_local /= '' ) THEN
                       IF ( fms_error_handler('diag_manager_mod::send_data_3d', err_msg_local, err_msg) ) THEN
+                         DEALLOCATE(field_out)
                          DEALLOCATE(oor_mask)
                          RETURN
                       END IF
                    END IF
                 END IF
-                WHERE ( mask(f1:f2,f3:f4,ks:ke) .AND.&
-                     & field(f1:f2,f3:f4,ks:ke) < output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) ) &
-                     & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) = field(f1:f2,f3:f4,ks:ke)
+                WHERE ( mask(f1:f2,f3:f4,ks:ke) .AND. field_out(f1:f2,f3:f4,ks:ke) <&
+                      & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) ) &
+                   & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) = field_out(f1:f2,f3:f4,ks:ke)
              END IF
           ELSE
              IF ( need_compute ) THEN
@@ -2718,8 +2818,9 @@ CONTAINS
                          IF ( l_start(1)+hi <=i.AND.i<=l_end(1)+hi.AND.l_start(2)+hj<=j.AND.j<=l_end(2)+hj) THEN
                             i1 = i-l_start(1)-hi+1
                             j1=  j-l_start(2)-hj+1
-                            IF ( field(i-is+1+hi,j-js+1+hj,k) < output_fields(out_num)%buffer(i1,j1,k1,sample) ) THEN
-                               output_fields(out_num)%buffer(i1,j1,k1,sample) = field(i-is+1+hi,j-js+1+hj,k)
+                            IF ( field_out(i-is+1+hi,j-js+1+hj,k) <&
+                               & output_fields(out_num)%buffer(i1,j1,k1,sample) ) THEN
+                               output_fields(out_num)%buffer(i1,j1,k1,sample) = field_out(i-is+1+hi,j-js+1+hj,k)
                             END IF
                          END IF
                       END DO
@@ -2729,21 +2830,24 @@ CONTAINS
              ELSE IF ( reduced_k_range ) THEN
                 ksr= l_start(3)
                 ker= l_end(3)
-                WHERE ( field(f1:f2,f3:f4,ksr:ker) < output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) ) &
-                     output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) = field(f1:f2,f3:f4,ksr:ker)
+                WHERE ( field_out(f1:f2,f3:f4,ksr:ker) <&
+                      & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) ) &
+                   & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) = field_out(f1:f2,f3:f4,ksr:ker)
              ELSE
                 IF ( debug_diag_manager ) THEN
                    CALL update_bounds(out_num, is-hi, ie-hi, js-hj, je-hj, ks, ke)
                    CALL check_out_of_bounds(out_num, diag_field_id, err_msg=err_msg_local)
                    IF ( err_msg_local /= '' ) THEN
                       IF ( fms_error_handler('diag_manager_mod::send_data_3d', err_msg_local, err_msg) ) THEN
+                         DEALLOCATE(field_out)
                          DEALLOCATE(oor_mask)
                          RETURN
                       END IF
                    END IF
                 END IF
-                WHERE ( field(f1:f2,f3:f4,ks:ke) < output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) )&
-                     & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) = field(f1:f2,f3:f4,ks:ke)
+                WHERE ( field_out(f1:f2,f3:f4,ks:ke) <&
+                      & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) )&
+                   & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) = field_out(f1:f2,f3:f4,ks:ke)
              END IF
           END IF
           output_fields(out_num)%count_0d(sample) = 1
@@ -2754,13 +2858,14 @@ CONTAINS
                    k1 = k - l_start(3) + 1
                    DO j = js, je
                       DO i = is, ie
-                         IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                         IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. &
+                            & j <= l_end(2)+hj ) THEN
                             i1 = i-l_start(1)-hi+1
                             j1 =  j-l_start(2)-hj+1
                             IF ( mask(i-is+1+hi,j-js+1+hj,k) ) THEN
                                output_fields(out_num)%buffer(i1,j1,k1,sample) = &
                                     output_fields(out_num)%buffer(i1,j1,k1,sample) + &
-                                    field(i-is+1+hi,j-js+1+hj,k)
+                                    field_out(i-is+1+hi,j-js+1+hj,k)
                             END IF
                          END IF
                       END DO
@@ -2772,13 +2877,14 @@ CONTAINS
                 ker= l_end(3)
                 output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) = &
                      &   output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) + &
-                     &   field(f1:f2,f3:f4,ksr:ker)
+                     &   field_out(f1:f2,f3:f4,ksr:ker)
              ELSE
                 IF ( debug_diag_manager ) THEN
                    CALL update_bounds(out_num, is-hi, ie-hi, js-hj, je-hj, ks, ke)
                    CALL check_out_of_bounds(out_num, diag_field_id, err_msg=err_msg_local)
                    IF ( err_msg_local /= '' ) THEN
                       IF ( fms_error_handler('diag_manager_mod::send_data_3d', err_msg_local, err_msg) ) THEN
+                         DEALLOCATE(field_out)
                          DEALLOCATE(oor_mask)
                          RETURN
                       END IF
@@ -2787,7 +2893,7 @@ CONTAINS
                 WHERE ( mask(f1:f2,f3:f4,ks:ke) ) &
                      & output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) = &
                      &  output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) + &
-                     &  field(f1:f2,f3:f4,ks:ke)
+                     &  field_out(f1:f2,f3:f4,ks:ke)
              END IF
           ELSE
              IF ( need_compute ) THEN
@@ -2800,7 +2906,7 @@ CONTAINS
                             j1=  j-l_start(2)-hj+1
                             output_fields(out_num)%buffer(i1,j1,k1,sample) = &
                                &    output_fields(out_num)%buffer(i1,j1,k1,sample) + &
-                               &    field(i-is+1+hi,j-js+1+hj,k)
+                               &    field_out(i-is+1+hi,j-js+1+hj,k)
                          END IF
                       END DO
                    END DO
@@ -2810,13 +2916,14 @@ CONTAINS
                 ker= l_end(3)
                 output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) = &
                      &  output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) + &
-                     &  field(f1:f2,f3:f4,ksr:ker)
+                     &  field_out(f1:f2,f3:f4,ksr:ker)
              ELSE
                 IF ( debug_diag_manager ) THEN
                    CALL update_bounds(out_num, is-hi, ie-hi, js-hj, je-hj, ks, ke)
                    CALL check_out_of_bounds(out_num, diag_field_id, err_msg=err_msg_local)
                    IF ( err_msg_local /= '' ) THEN
                       IF ( fms_error_handler('diag_manager_mod::send_data_3d', err_msg_local, err_msg) ) THEN
+                         DEALLOCATE(field_out)
                          DEALLOCATE(oor_mask)
                          RETURN
                       END IF
@@ -2824,7 +2931,7 @@ CONTAINS
                 END IF
                 output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) = &
                 &    output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) + &
-                &    field(f1:f2,f3:f4,ks:ke)
+                &    field_out(f1:f2,f3:f4,ks:ke)
              END IF
           END IF
           output_fields(out_num)%count_0d(sample) = 1
@@ -2833,10 +2940,11 @@ CONTAINS
           IF ( need_compute ) THEN
              DO j = js, je
                 DO i = is, ie
-                   IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                   IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj) THEN
                       i1 = i-l_start(1)-hi+1
                       j1 = j-l_start(2)-hj+1
-                      output_fields(out_num)%buffer(i1,j1,:,sample) = field(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))
+                      output_fields(out_num)%buffer(i1,j1,:,sample) =&
+                         & field_out(i-is+1+hi,j-js+1+hj,l_start(3):l_end(3))
                    END IF
                 END DO
              END DO
@@ -2844,19 +2952,20 @@ CONTAINS
           ELSE IF ( reduced_k_range ) THEN
              ksr = l_start(3)
              ker = l_end(3)
-             output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) = field(f1:f2,f3:f4,ksr:ker)
+             output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,:,sample) = field_out(f1:f2,f3:f4,ksr:ker)
           ELSE
              IF ( debug_diag_manager ) THEN
                 CALL update_bounds(out_num, is-hi, ie-hi, js-hj, je-hj, ks, ke)
                 CALL check_out_of_bounds(out_num, diag_field_id, err_msg=err_msg_local)
                 IF ( err_msg_local /= '' ) THEN
                    IF ( fms_error_handler('diag_manager_mod::send_data_3d', err_msg_local, err_msg) ) THEN
+                      DEALLOCATE(field_out)
                       DEALLOCATE(oor_mask)
                       RETURN
                    END IF
                 END IF
              END IF
-             output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) = field(f1:f2,f3:f4,ks:ke)
+             output_fields(out_num)%buffer(is-hi:ie-hi,js-hj:je-hj,ks:ke,sample) = field_out(f1:f2,f3:f4,ks:ke)
           END IF
 
           IF ( PRESENT(mask) .AND. missvalue_present ) THEN
@@ -2865,7 +2974,8 @@ CONTAINS
                    k1 = k - l_start(3) + 1
                    DO j = js, je
                       DO i = is, ie
-                         IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
+                         IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. &
+                            & j <= l_end(2)+hj ) THEN
                             i1 = i-l_start(1)-hi+1
                             j1 =  j-l_start(2)-hj+1
                             IF ( .NOT.mask(i-is+1+hi,j-js+1+hj,k) )&
@@ -2903,6 +3013,7 @@ CONTAINS
           CALL check_bounds_are_exact_static(out_num, diag_field_id, err_msg=err_msg_local)
           IF ( err_msg_local /= '' ) THEN
              IF ( fms_error_handler('diag_manager_mod::send_data_3d', err_msg_local, err_msg)) THEN
+                DEALLOCATE(field_out)
                 DEALLOCATE(oor_mask)
                 RETURN
              END IF
@@ -2912,45 +3023,99 @@ CONTAINS
        ! If rmask and missing value present, then insert missing value
        IF ( PRESENT(rmask) .AND. missvalue_present ) THEN
           IF ( need_compute ) THEN
-             DO k = l_start(3), l_end(3)
-                k1 = k - l_start(3) + 1
-                DO j = js, je
-                   DO i = is, ie
-                      IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND. j <= l_end(2)+hj ) THEN
-                         i1 = i-l_start(1)-hi+1
-                         j1 =  j-l_start(2)-hj+1
-                         IF ( rmask(i-is+1+hi,j-js+1+hj,k) < 0.5 ) &
-                              & output_fields(out_num)%buffer(i1,j1,k1,sample) = missvalue
-                      END IF
+             SELECT TYPE (rmask)
+             TYPE IS (real(kind=r4_kind))
+                DO k = l_start(3), l_end(3)
+                   k1 = k - l_start(3) + 1
+                   DO j = js, je
+                      DO i = is, ie
+                         IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND.&
+                            & j <= l_end(2)+hj ) THEN
+                            i1 = i-l_start(1)-hi+1
+                            j1 =  j-l_start(2)-hj+1
+                            IF ( rmask(i-is+1+hi,j-js+1+hj,k) < 0.5_r4_kind ) &
+                                 & output_fields(out_num)%buffer(i1,j1,k1,sample) = missvalue
+                         END IF
+                      END DO
                    END DO
                 END DO
-             END DO
+             TYPE IS (real(kind=r8_kind))
+                DO k = l_start(3), l_end(3)
+                   k1 = k - l_start(3) + 1
+                   DO j = js, je
+                      DO i = is, ie
+                         IF ( l_start(1)+hi <= i .AND. i <= l_end(1)+hi .AND. l_start(2)+hj <= j .AND.&
+                            & j <= l_end(2)+hj ) THEN
+                            i1 = i-l_start(1)-hi+1
+                            j1 =  j-l_start(2)-hj+1
+                            IF ( rmask(i-is+1+hi,j-js+1+hj,k) < 0.5_r8_kind ) &
+                                 & output_fields(out_num)%buffer(i1,j1,k1,sample) = missvalue
+                         END IF
+                      END DO
+                   END DO
+                END DO
+             CLASS DEFAULT
+                CALL error_mesg ('diag_manager_mod::send_data_3d',&
+                     & 'The rmask is not one of the supported types of real(kind=4) or real(kind=8)', FATAL)
+             END SELECT
           ELSE IF ( reduced_k_range ) THEN
              ksr= l_start(3)
              ker= l_end(3)
-             DO k= ksr, ker
-                k1 = k - ksr + 1
-                DO j=js, je
-                   DO i=is, ie
-                      IF ( rmask(i-is+1+hi,j-js+1+hj,k) < 0.5 ) &
-                           & output_fields(out_num)%buffer(i-hi,j-hj,k1,sample)= missvalue
+             SELECT TYPE (rmask)
+             TYPE IS (real(kind=r4_kind))
+                DO k= ksr, ker
+                   k1 = k - ksr + 1
+                   DO j=js, je
+                      DO i=is, ie
+                         IF ( rmask(i-is+1+hi,j-js+1+hj,k) < 0.5_r4_kind ) &
+                              & output_fields(out_num)%buffer(i-hi,j-hj,k1,sample)= missvalue
+                      END DO
                    END DO
                 END DO
-             END DO
+             TYPE IS (real(kind=r8_kind))
+                DO k= ksr, ker
+                   k1 = k - ksr + 1
+                   DO j=js, je
+                      DO i=is, ie
+                         IF ( rmask(i-is+1+hi,j-js+1+hj,k) < 0.5_r8_kind ) &
+                              & output_fields(out_num)%buffer(i-hi,j-hj,k1,sample)= missvalue
+                      END DO
+                   END DO
+                END DO
+             CLASS DEFAULT
+                CALL error_mesg ('diag_manager_mod::send_data_3d',&
+                     & 'The rmask is not one of the supported types of real(kind=4) or real(kind=8)', FATAL)
+             END SELECT
           ELSE
-             DO k=ks, ke
-                DO j=js, je
-                   DO i=is, ie
-                      IF ( rmask(i-is+1+hi,j-js+1+hj,k) < 0.5 ) &
-                           & output_fields(out_num)%buffer(i-hi,j-hj,k,sample)= missvalue
+             SELECT TYPE (rmask)
+             TYPE IS (real(kind=r4_kind))
+                DO k=ks, ke
+                   DO j=js, je
+                      DO i=is, ie
+                         IF ( rmask(i-is+1+hi,j-js+1+hj,k) < 0.5_r4_kind ) &
+                              & output_fields(out_num)%buffer(i-hi,j-hj,k,sample)= missvalue
+                      END DO
                    END DO
                 END DO
-             END DO
+             TYPE IS (real(kind=r8_kind))
+                DO k=ks, ke
+                   DO j=js, je
+                      DO i=is, ie
+                         IF ( rmask(i-is+1+hi,j-js+1+hj,k) < 0.5_r8_kind ) &
+                              & output_fields(out_num)%buffer(i-hi,j-hj,k,sample)= missvalue
+                      END DO
+                   END DO
+                END DO
+             CLASS DEFAULT
+                CALL error_mesg ('diag_manager_mod::send_data_3d',&
+                     & 'The rmask is not one of the supported types of real(kind=4) or real(kind=8)', FATAL)
+             END SELECT
           END IF
        END IF
 
     END DO num_out_fields
 
+    DEALLOCATE(field_out)
     DEALLOCATE(oor_mask)
   END FUNCTION send_data_3d
 
@@ -3045,7 +3210,8 @@ CONTAINS
   LOGICAL FUNCTION send_tile_averaged_data3d( id, field, area, time, mask )
     INTEGER, INTENT(in) :: id !< id of the diagnostic field
     REAL, DIMENSION(:,:,:,:), INTENT(in) :: field !< (lon, lat, tile, lev) field to average and send
-    REAL, DIMENSION(:,:,:), INTENT(in) :: area (:,:,:) !< (lon, lat, tile) tile areas ( == averaging weights), arbitrary units
+    REAL, DIMENSION(:,:,:), INTENT(in) :: area (:,:,:) !< (lon, lat, tile) tile areas ( == averaging
+                                                       !! weights), arbitrary units
     TYPE(time_type), INTENT(in)  :: time !< current time
     LOGICAL, DIMENSION(:,:,:), INTENT(in), OPTIONAL :: mask !< (lon, lat, tile) land mask
 
@@ -3133,7 +3299,6 @@ CONTAINS
     INTEGER :: b1,b2,b3,b4 !< size of buffer along x,y,z,and diurnal axes
     INTEGER :: i, j, k, m
     REAL    :: missvalue, num
-    real,allocatable,dimension(:,:,:,:) :: diurnal_buffer
     writing_field = 0
 
     need_compute = output_fields(out_num)%need_compute
@@ -3233,17 +3398,6 @@ CONTAINS
     ! Output field
     IF ( at_diag_end .AND. freq == END_OF_RUN ) output_fields(out_num)%next_output = time
 ! if (time .eq. output_fields(out_num)%next_output) then
-    if (output_fields(out_num)%n_diurnal_samples > 1) then
-          !> allocate the buffer for diurnal data
-          allocate(diurnal_buffer(size(output_fields(out_num)%buffer,1),size(output_fields(out_num)%buffer,2),&
-                    size(output_fields(out_num)%buffer,4),size(output_fields(out_num)%buffer,3)))
-          !> swap the last 2 axes in the data buffer to match the netcdf output order
-          do i = 1,size(output_fields(out_num)%buffer,4)
-          do j = 1,size(output_fields(out_num)%buffer,3)
-               diurnal_buffer(:,:,i,j) = output_fields(out_num)%buffer(:,:,j,i)
-          enddo
-          enddo
-    endif
     IF ( (output_fields(out_num)%time_ops) .AND. (.NOT. mix_snapshot_average_fields) ) THEN
        middle_time = (output_fields(out_num)%last_output+output_fields(out_num)%next_output)/2
        if (trim(files(file_num)%filename_time_bounds) == "begin") then
@@ -3254,22 +3408,11 @@ CONTAINS
            filename_time = output_fields(out_num)%next_output
        endif
 
-       if (output_fields(out_num)%n_diurnal_samples > 1) then
-          CALL diag_data_out(file_num, out_num, diurnal_buffer, middle_time, &
-                 & use_mpp_io_arg=use_mpp_io, filename_time=filename_time)
-       else
-          CALL diag_data_out(file_num, out_num, output_fields(out_num)%buffer, middle_time, &
-                 & use_mpp_io_arg=use_mpp_io, filename_time=filename_time)
-       endif
+       CALL diag_data_out(file_num, out_num, output_fields(out_num)%buffer, middle_time, &
+                 & filename_time=filename_time)
     ELSE
-       if (output_fields(out_num)%n_diurnal_samples > 1) then
-            CALL diag_data_out(file_num, out_num, &
-                 & diurnal_buffer, output_fields(out_num)%next_output, use_mpp_io_arg=use_mpp_io)
-       else
-            CALL diag_data_out(file_num, out_num, &
-                 & output_fields(out_num)%buffer, output_fields(out_num)%next_output,&
-                 & use_mpp_io_arg=use_mpp_io)
-       endif
+       CALL diag_data_out(file_num, out_num, &
+                 & output_fields(out_num)%buffer, output_fields(out_num)%next_output)
     END IF
 !output_fields(out_num)%last_output = output_fields(out_num)%next_output
 ! endif
@@ -3298,7 +3441,6 @@ CONTAINS
        END IF
        IF ( input_fields(in_num)%mask_variant .AND. average ) output_fields(out_num)%counter = 0.0
     END IF
-    if (allocated(diurnal_buffer))deallocate(diurnal_buffer)
   END FUNCTION writing_field
 
   SUBROUTINE diag_manager_set_time_end(Time_end_in)
@@ -3333,8 +3475,7 @@ CONTAINS
                & (input_fields(in_num)%active_omp_level.LE.1) ) CYCLE
           file_num = output_fields(out_num)%output_file
           CALL diag_data_out(file_num, out_num, &
-               & output_fields(out_num)%buffer, time, &
-               & use_mpp_io_arg=use_mpp_io)
+               & output_fields(out_num)%buffer, time)
         END DO
       END IF
     END DO
@@ -3394,8 +3535,8 @@ CONTAINS
              status = writing_field(out_num, .FALSE., error_string, next_time)
              IF ( status == -1 ) THEN
                 IF ( mpp_pe() .EQ. mpp_root_pe() ) THEN
-                   IF(fms_error_handler('diag_manager_mod::diag_send_complete','module/output_field '//TRIM(error_string)//&
-                        & ', write EMPTY buffer', err_msg)) RETURN
+                   IF(fms_error_handler('diag_manager_mod::diag_send_complete','module/output_field '//&
+                        & TRIM(error_string)//', write EMPTY buffer', err_msg)) RETURN
                 END IF
              END IF
           END IF  !time > output_fields(out_num)%next_output
@@ -3412,17 +3553,15 @@ CONTAINS
     INTEGER :: file
 
     IF ( do_diag_field_log ) THEN
-       CALL mpp_close (diag_log_unit)
+       close (diag_log_unit)
     END IF
     DO file = 1, num_files
        CALL closing_file(file, time)
     END DO
-  if (.not.use_mpp_io) then
     if (allocated(fileobjU)) deallocate(fileobjU)
     if (allocated(fileobj)) deallocate(fileobj)
     if (allocated(fileobjND)) deallocate(fileobjND)
-  if (allocated(fnum_for_domain)) deallocate(fnum_for_domain)
-  endif
+    if (allocated(fnum_for_domain)) deallocate(fnum_for_domain)
   END SUBROUTINE diag_manager_end
 
   !> @brief Replaces diag_manager_end; close just one file: files(file)
@@ -3430,11 +3569,10 @@ CONTAINS
     INTEGER, INTENT(in) :: file
     TYPE(time_type), INTENT(in) :: time
 
-    INTEGER :: j, i, input_num, freq, status, loop1, loop2
+    INTEGER :: j, i, input_num, freq, status
     INTEGER :: stdout_unit
     LOGICAL :: reduced_k_range, need_compute, local_output
     CHARACTER(len=128) :: message
-    real,allocatable,dimension(:,:,:,:) :: diurnal_buffer
 
     stdout_unit = stdout()
 
@@ -3485,25 +3623,11 @@ CONTAINS
                & TRIM(output_fields(i)%output_name)//' NOT available,'//&
                & ' check if output interval > runlength. Netcdf fill_values are written', NOTE)
           output_fields(i)%buffer = FILL_VALUE
-          if (output_fields(i)%n_diurnal_samples > 1) then
-               !> allocate the buffer for diurnal data
-               if (.not. allocated(diurnal_buffer)) &
-                    allocate(diurnal_buffer(size(output_fields(i)%buffer,1),size(output_fields(i)%buffer,2),&
-                    size(output_fields(i)%buffer,4),size(output_fields(i)%buffer,3)))
-               !> swap the last 2 axes in the data buffer to match the netcdf output order
-               do loop1 = 1,size(output_fields(i)%buffer,4)
-               do loop2 = 1,size(output_fields(i)%buffer,3)
-                    diurnal_buffer(:,:,loop1,loop2) = output_fields(i)%buffer(:,:,loop2,loop1)
-               enddo
-               enddo
-               CALL diag_data_out(file, i, diurnal_buffer, time, .TRUE., use_mpp_io_arg=use_mpp_io)
-          else
-          CALL diag_data_out(file, i, output_fields(i)%buffer, time, .TRUE., use_mpp_io_arg=use_mpp_io)
-          endif
+          CALL diag_data_out(file, i, output_fields(i)%buffer, time, .TRUE.)
        END IF
     END DO
     ! Now it's time to output static fields
-    CALL write_static(file, use_mpp_io)
+    CALL write_static(file)
 
     ! Write out the number of bytes of data saved to this file
     IF ( write_bytes_in_file ) THEN
@@ -3512,7 +3636,6 @@ CONTAINS
             & WRITE (stdout_unit,'(a,i12,a,a)') 'Diag_Manager: ',files(file)%bytes_written, &
             & ' bytes of data written to file ',TRIM(files(file)%name)
     END IF
-     if (allocated(diurnal_buffer)) deallocate(diurnal_buffer)
   END SUBROUTINE closing_file
 
   !> @brief Initialize Diagnostics Manager.
@@ -3531,9 +3654,6 @@ CONTAINS
     INTEGER, ALLOCATABLE, DIMENSION(:) :: pelist
     INTEGER :: stdlog_unit, stdout_unit
     integer :: j
-#ifndef INTERNAL_FILE_NML
-    INTEGER :: nml_unit
-#endif
     CHARACTER(len=256) :: err_msg_local
 
     NAMELIST /diag_manager_nml/ append_pelist_name, mix_snapshot_average_fields, max_output_fields, &
@@ -3556,7 +3676,8 @@ CONTAINS
     ! Determine pack_size from how many bytes a real value has (how compiled)
     pack_size = SIZE(TRANSFER(0.0_DblKind, (/0.0, 0.0, 0.0, 0.0/)))
     IF ( pack_size.NE.1 .AND. pack_size.NE.2 ) THEN
-       IF ( fms_error_handler('diag_manager_mod::diag_manager_init', 'unknown pack_size.  Must be 1, or 2.', err_msg) ) RETURN
+       IF ( fms_error_handler('diag_manager_mod::diag_manager_init', 'unknown pack_size.  Must be 1, or 2.', &
+          &  err_msg) ) RETURN
     END IF
 
     ! Get min and max values for real(kind=R4_KIND)
@@ -3578,28 +3699,18 @@ CONTAINS
        IF ( diag_model_subset >= DIAG_OTHER .AND. diag_model_subset <= DIAG_ALL ) THEN
           diag_subset_output = diag_model_subset
        ELSE
-          IF ( fms_error_handler('diag_manager_mod::diag_manager_init', 'invalid value of diag_model_subset',err_msg) ) RETURN
+          IF ( fms_error_handler('diag_manager_mod::diag_manager_init', 'invalid value of diag_model_subset', &
+             & err_msg) ) RETURN
        END IF
     END IF
 
-#ifdef INTERNAL_FILE_NML
     READ (input_nml_file, NML=diag_manager_nml, IOSTAT=mystat)
-#else
-    IF ( file_exist('input.nml') ) THEN
-       nml_unit = open_namelist_file()
-       READ (nml_unit, diag_manager_nml, iostat=mystat)
-       CALL close_file(nml_unit)
-    ELSE
-       ! Set mystat to an arbitrary positive number if input.nml does not exist.
-       mystat = 100
-    END IF
-#endif
     ! Check the status of reading the diag_manager_nml
 
     IF ( check_nml_error(IOSTAT=mystat, NML_NAME='DIAG_MANAGER_NML') < 0 ) THEN
        IF ( mpp_pe() == mpp_root_pe() ) THEN
-          CALL error_mesg('diag_manager_mod::diag_manager_init', 'DIAG_MANAGER_NML not found in input.nml.  Using defaults.',&
-               & WARNING)
+          CALL error_mesg('diag_manager_mod::diag_manager_init', &
+               & 'DIAG_MANAGER_NML not found in input nml file.  Using defaults.', WARNING)
        END IF
     END IF
 
@@ -3611,17 +3722,8 @@ CONTAINS
     IF ( use_cmor ) THEN
        err_msg_local = ''
        WRITE (err_msg_local,'(ES8.1E2)') CMOR_MISSING_VALUE
-       CALL error_mesg('diag_manager_mod::diag_manager_init', 'Using CMOR missing value ('//TRIM(err_msg_local)//').', NOTE)
-    END IF
-
-    ! Issue note if attempting to set diag_manager_nml::max_files larger than
-    ! mpp_get_maxunits() -- Default is 1024 set in mpp_io.F90
-    IF ( max_files .GT. mpp_get_maxunits() ) THEN
-       err_msg_local = ''
-       WRITE (err_msg_local,'(A,I6,A,I6,A,I6,A)') "DIAG_MANAGER_NML variable 'max_files' (",max_files,") is larger than '",&
-            & mpp_get_maxunits(),"'.  Forcing 'max_files' to be ",mpp_get_maxunits(),"."
-       CALL error_mesg('diag_manager_mod::diag_managet_init', TRIM(err_msg_local), NOTE)
-       max_files = mpp_get_maxunits()
+       CALL error_mesg('diag_manager_mod::diag_manager_init', 'Using CMOR missing value ('//TRIM(err_msg_local)// &
+            & ').', NOTE)
     END IF
 
     ! How to handle Out of Range Warnings.
@@ -3659,10 +3761,8 @@ CONTAINS
                & 'diag_manager is using fms2_io', NOTE)
     else
        CALL error_mesg('diag_manager_mod::diag_manager_init',&
-               & 'diag_manager is using mpp_io', NOTE)
-       CALL error_mesg('diag_manager_mod::diag_manager_init',&
-             &'MPP_IO is no longer supported.  Please remove from namelist',&
-              &WARNING)
+             &'MPP_IO is no longer supported.  Please remove use_mpp_io from diag_manager_nml namelist',&
+              &FATAL)
     endif
     ALLOCATE(pelist(mpp_npes()))
     CALL mpp_get_current_pelist(pelist, pelist_name)
@@ -3691,7 +3791,7 @@ CONTAINS
 
     ! open diag field log file
     IF ( do_diag_field_log.AND.mpp_pe().EQ.mpp_root_pe() ) THEN
-       CALL mpp_open(diag_log_unit, 'diag_field_log.out', nohdrs=.TRUE.)
+       open(newunit=diag_log_unit, file='diag_field_log.out', action='WRITE')
        WRITE (diag_log_unit,'(777a)') &
             & 'Module',        SEP, 'Field',          SEP, 'Long Name',    SEP,&
             & 'Units',         SEP, 'Number of Axis', SEP, 'Time Axis',    SEP,&
@@ -3818,7 +3918,6 @@ CONTAINS
     REAL, DIMENSION(:), INTENT(in), OPTIONAL :: rval !< Real attribute value(s)
 
     INTEGER :: istat, length, i, j, this_attribute, out_field
-    CHARACTER(len=1024) :: err_msg
 
     IF ( .NOT.first_send_data_call ) THEN
        ! Call error due to unable to add attribute after send_data called
@@ -3875,14 +3974,15 @@ CONTAINS
              ! Checking to see if num_attributes == max_field_attributes, and return error message
              IF ( this_attribute .GT. max_field_attributes ) THEN
                 ! <ERROR STATUS="FATAL">
-                !   Number of attributes exceeds max_field_attributes for attribute <name> to module/input_field <module_name>/<field_name>.
+                !   Number of attributes exceeds max_field_attributes for attribute <name>
+                !   to module/input_field <module_name>/<field_name>.
                 !   Increase diag_manager_nml:max_field_attributes.
                 ! </ERROR>
                 CALL error_mesg('diag_manager_mod::diag_field_add_attribute',&
                      & 'Number of attributes exceeds max_field_attributes for attribute "'&
                      &//TRIM(name)//'" to module/input_field "'//TRIM(input_fields(diag_field_id)%module_name)//'/'&
-                     &//TRIM(input_fields(diag_field_id)%field_name)//'".  Increase diag_manager_nml:max_field_attributes.',&
-                     & FATAL)
+                     &//TRIM(input_fields(diag_field_id)%field_name)&
+                     &//'".  Increase diag_manager_nml:max_field_attributes.', FATAL)
              ELSE
                 output_fields(out_field)%num_attributes = this_attribute
                 ! Set name and type
@@ -3897,7 +3997,8 @@ CONTAINS
           CASE (NF90_INT)
              IF ( .NOT.PRESENT(ival) ) THEN
                 ! <ERROR STATUS="FATAL">
-                !   Number type claims INTEGER, but ival not present for attribute <name> to module/input_field <module_name>/<field_name>.
+                !   Number type claims INTEGER, but ival not present for attribute <name> to
+                !   module/input_field <module_name>/<field_name>.
                 !   Contact the developers.
                 ! </ERROR>
                 CALL error_mesg('diag_manager_mod::diag_field_add_attribute',&
@@ -3912,7 +4013,7 @@ CONTAINS
                 ! <ERROR STATUS="FATAL">
                 !   Unable to allocate iatt for attribute <name> to module/input_field <module_name>/<field_name>
                 ! </ERROR>
-                CALL error_mesg('diag_manager_mod::diag_field_add_attribute', 'Unable to allocate iatt for attribute "'&
+                CALL error_mesg('diag_manager_mod::diag_field_add_attribute','Unable to allocate iatt for attribute "'&
                      &//TRIM(name)//'" to module/input_field "'//TRIM(input_fields(diag_field_id)%module_name)//'/'&
                      &//TRIM(input_fields(diag_field_id)%field_name)//'"', FATAL)
              END IF
@@ -3922,7 +4023,8 @@ CONTAINS
           CASE (NF90_FLOAT)
              IF ( .NOT.PRESENT(rval) ) THEN
                 ! <ERROR STATUS="FATAL">
-                !   Attribute type claims READ, but rval not present for attribute <name> to module/input_field <module_name>/<field_name>.
+                !   Attribute type claims READ, but rval not present for attribute <name> to
+                !   module/input_field <module_name>/<field_name>.
                 !   Contact the developers.
                 ! </ERROR>
                 CALL error_mesg('diag_manager_mod::diag_field_add_attribute',&
@@ -3937,7 +4039,7 @@ CONTAINS
                 ! <ERROR STATUS="FATAL">
                 !   Unable to allocate fatt for attribute <name> to module/input_field <module_name>/<field_name>
                 ! </ERROR>
-                CALL error_mesg('diag_manager_mod::diag_field_add_attribute', 'Unable to allocate fatt for attribute "'&
+                CALL error_mesg('diag_manager_mod::diag_field_add_attribute','Unable to allocate fatt for attribute "'&
                      &//TRIM(name)//'" to module/input_field "'//TRIM(input_fields(diag_field_id)%module_name)//'/'&
                      &//TRIM(input_fields(diag_field_id)%field_name)//'"', FATAL)
              END IF
@@ -3947,7 +4049,8 @@ CONTAINS
           CASE (NF90_CHAR)
              IF ( .NOT.PRESENT(cval) ) THEN
                 ! <ERROR STATUS="FATAL">
-                !   Attribute type claims CHARACTER, but cval not present for attribute <name> to module/input_field <module_name>/<field_name>.
+                !   Attribute type claims CHARACTER, but cval not present for attribute <name>
+                !   to module/input_field <module_name>/<field_name>.
                 !   Contact the developers.
                 ! </ERROR>
                 CALL error_mesg('diag_manager_mod::diag_field_add_attribute',&
@@ -4001,9 +4104,6 @@ CONTAINS
     INTEGER, INTENT(in) :: diag_field_id !< ID number for field to add attribute to
     CHARACTER(len=*), INTENT(in) :: att_name !< new attribute name
     REAL, DIMENSION(:), INTENT(in) :: att_value !< new attribute value
-
-    INTEGER :: num_attributes, len
-    CHARACTER(len=512) :: err_msg
 
     CALL diag_field_attribute_init(diag_field_id, att_name, NF90_FLOAT, rval=att_value)
   END SUBROUTINE diag_field_add_attribute_r1d

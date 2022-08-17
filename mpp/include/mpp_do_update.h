@@ -17,8 +17,10 @@
 !* You should have received a copy of the GNU Lesser General Public
 !* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
 !***********************************************************************
+!> @addtogroup mpp_domains_mod
+!> @{
+    !> Updates data domain of 3D field whose computational domains have been computed
     subroutine MPP_DO_UPDATE_3D_( f_addrs, domain, update, d_type, ke, flags)
-!updates data domain of 3D field whose computational domains have been computed
       integer(i8_kind),         intent(in) :: f_addrs(:,:)
       type(domain2D),             intent(in) :: domain
       type(overlapSpec),          intent(in) :: update
@@ -44,7 +46,6 @@
       integer :: to_pe, from_pe, pos, msgsize
       integer :: n, l_size, l, m, i, j, k
       integer :: is, ie, js, je, tMe, dir
-      integer :: start, start1, start2, index, is1, ie1, js1, je1, ni, nj, total
       integer :: buffer_recv_size, nlist, outunit
       integer :: send_start_pos
       integer :: send_msgsize(MAXLIST)
@@ -300,3 +301,4 @@
       call mpp_clock_end(wait_clock)
       return
     end subroutine MPP_DO_UPDATE_3D_
+!> @}

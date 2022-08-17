@@ -18,15 +18,17 @@
 !* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
 !***********************************************************************
 !> @file
-!> @ingroup mpp
 !> @brief Updates data domain of 3D field whose computational domains have been computed
 
+!> @addtogroup mpp_domains_mod
+!> @{
+
+    !> Updates data domain of 3D field whose computational domains have been computed
     subroutine MPP_DO_CHECK_3D_( f_addrs, domain, check, d_type, ke, flags, name)
-!updates data domain of 3D field whose computational domains have been computed
       integer(i8_kind),         intent(in) :: f_addrs(:,:)
       type(domain2D),             intent(in) :: domain
       type(overlapSpec),          intent(in) :: check
-      MPP_TYPE_,                  intent(in) :: d_type  ! creates unique interface
+      MPP_TYPE_,                  intent(in) :: d_type  !<creates unique interface
       integer,                    intent(in) :: ke
       integer, optional,          intent(in) :: flags
       character(len=*), optional, intent(in) :: name
@@ -233,7 +235,8 @@
                            print*,"Error from MPP_DO_CHECK on pe = ", mpp_pe(), ": field ", &
                                 trim(field_name), " at point (", i, ",", j, ",", k, ") = ", field(i,j,k), &
                                 " does not equal to the value = ", buffer(pos), " on pe ", check%recv(m)%pe
-                           call mpp_error(debug_update_level, "MPP_DO_CHECK: mismatch on the boundary for symmetry point")
+                           call mpp_error(debug_update_level, &
+                                          &  "MPP_DO_CHECK: mismatch on the boundary for symmetry point")
                            exit CHECK_LOOP
                         end if
                      end do
@@ -246,3 +249,4 @@
 
       return
     end subroutine MPP_DO_CHECK_3D_
+!> @}

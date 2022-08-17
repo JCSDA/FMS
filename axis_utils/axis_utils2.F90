@@ -19,17 +19,12 @@
 !> @defgroup axis_utils2_mod axis_utils2_mod
 !> @ingroup axis_utils
 !> @brief A set of utilities for manipulating axes and extracting axis attributes.
-!!
-!> FMS2_IO equivalent version of @ref axis_utils_mod.
+!! FMS2_IO equivalent version of @ref axis_utils_mod.
 !> @author M.J. Harrison
-
-!> @file
-!> @brief File for @ref axis_utils2_mod
 
 !> @addtogroup axis_utils2_mod
 !> @{
 module axis_utils2_mod
-  use, intrinsic :: iso_fortran_env
   use mpp_mod,    only: mpp_error, FATAL, stdout
   use fms_mod,    only: lowercase, uppercase, string_array_index, fms_error_handler
   use fms2_io_mod, only: FmsNetcdfDomainFile_t, variable_att_exists, FmsNetcdfFile_t, &
@@ -181,7 +176,8 @@ contains
   buffer = ""
   if (variable_att_exists(fileobj, name, "edges")) then
     !! If the reproduce_null_char_bug flag is turned on fms2io will not remove the null character
-    call get_variable_attribute(fileobj, name, "edges", buffer, reproduce_null_char_bug_flag=reproduce_null_char_bug)
+    call get_variable_attribute(fileobj, name, "edges", buffer(1:128), &
+        reproduce_null_char_bug_flag=reproduce_null_char_bug)
 
     !! Check for a null character here, if it exists *_bnds will be calculated instead of read in
     if (reproduce_null_char_bug) then
@@ -191,7 +187,8 @@ contains
     endif
   elseif (variable_att_exists(fileobj, name, "bounds")) then
     !! If the reproduce_null_char_bug flag is turned on fms2io will not remove the null character
-    call get_variable_attribute(fileobj, name, "bounds", buffer, reproduce_null_char_bug_flag=reproduce_null_char_bug)
+    call get_variable_attribute(fileobj, name, "bounds", buffer(1:128), &
+        reproduce_null_char_bug_flag=reproduce_null_char_bug)
 
     !! Check for a null character here, if it exists *_bnds will be calculated instead of read in
     if (reproduce_null_char_bug) then
@@ -441,8 +438,8 @@ end subroutine axis_edges
     do i=2,ia
        if (array(i) < array(i-1)) then
           unit = stdout()
-          write (unit,*) '=> Error: "frac_index" array must be monotonically increasing when searching for nearest value to ',&
-                              value
+          write (unit,*) &
+            '=> Error: "frac_index" array must be monotonically increasing when searching for nearest value to ', value
           write (unit,*) '          array(i) < array(i-1) for i=',i
           write (unit,*) '          array(i) for i=1..ia follows:'
           do ii=1,ia
@@ -552,7 +549,7 @@ end subroutine axis_edges
     real, dimension(:),    intent(in) :: grid1, data1, grid2
     real, dimension(:), intent(inout) :: data2
 
-    integer :: n1, n2, i, n, ext
+    integer :: n1, n2, i, n
     real :: w
 
     n1 = size(grid1(:))
@@ -709,8 +706,7 @@ end subroutine axis_edges
     real, dimension(:,:),    intent(in) :: grid1, data1, grid2
     real, dimension(:,:), intent(inout) :: data2
 
-    integer :: n1, n2, i, n, k2, ks, ke
-    real :: w
+    integer :: n1, n2, n, k2, ks, ke
 
     n1 = size(grid1,1)
     n2 = size(grid2,1)
@@ -736,8 +732,8 @@ end subroutine axis_edges
     character(len=*), optional, intent(in) :: method
     real,             optional, intent(in) :: yp1, yp2
 
-    integer           :: n1, n2, m1, m2, k2, i, n, m
-    real              :: w, y1, y2
+    integer           :: n1, n2, m1, m2, k2, n, m
+    real              :: y1, y2
     character(len=32) :: interp_method
     integer           :: ks, ke
     n1 = size(grid1,1)

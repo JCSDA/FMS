@@ -17,7 +17,11 @@
 !* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
 !***********************************************************************
 !> @file
-!> @ingroup fms2_io
+!> @brief Routines to add restart variables to a netcdf file with different dimension sizes
+!! for the @ref netcdf_add_restart_variable interface
+
+!> @addtogroup netcdf_io_mod
+!> @{
 
 !> @brief Add a restart variable to a netcdf file.
 subroutine netcdf_add_restart_variable_0d(fileobj, variable_name, vdata, dimensions, &
@@ -421,7 +425,8 @@ subroutine register_restart_region_3d(fileobj, variable_name, vdata, indices, gl
   class(*), dimension(:,:,:), intent(in), target :: vdata !< Pointer to variable data
   integer, dimension(4), intent(in)                 :: indices !< Indices for the halo region for the variable
                                                                !! (starting x, ending x, starting y, ending y)
-  integer, dimension(:), intent(in)                 :: global_size !> Global_size(1:3) == size of the variable in (x,y,z)
+  integer, dimension(:), intent(in)                 :: global_size !> Global_size(1:3) == size of the
+                                                                   !! variable in (x,y,z)
   integer, dimension(:), intent(in)                 :: pelist !> List of pelist that have the data for
                                                               !! the variable
   logical, intent(in)                               :: is_root_pe !> Flag indicating if this is the root_pe
@@ -570,3 +575,4 @@ subroutine set_dimensions(fileobj, bc_dimensions, dimnames, global_size)
       endif
   endif
 end subroutine set_dimensions
+!> @}

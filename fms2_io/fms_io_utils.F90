@@ -20,9 +20,6 @@
 !> @ingroup fms2_io
 !> @brief Misc. utility routines for use in @ref fms2_io
 
-!> @file
-!> @brief File for @ref fms_io_utils_mod
-
 !> @addtogroup fms_io_utils_mod
 !> @{
 module fms_io_utils_mod
@@ -36,6 +33,7 @@ use mpp_domains_mod, only: domain2D, domainUG, mpp_get_ntile_count, &
                            mpp_get_current_ntile, mpp_get_tile_id, &
                            mpp_get_UG_domain_ntiles, mpp_get_UG_domain_tile_id
 use platform_mod
+use fms_string_utils_mod, only: string_copy
 implicit none
 private
 
@@ -55,8 +53,6 @@ public :: allocate_array
 public :: put_array_section
 public :: get_array_section
 public :: get_data_type_string
-public :: get_checksum
-public :: string2
 public :: open_check
 public :: string_compare
 public :: restart_filepath_mangle
@@ -76,14 +72,6 @@ type :: char_linked_list
   character(len=128) :: string
   type(char_linked_list), pointer :: head => null()
 endtype char_linked_list
-
-!> @brief Converts a given integer or real into a character string
-!> @ingroup fms_io_utils_mod
-interface string2
-  module procedure string_from_integer2
-  module procedure string_from_real2
-end interface string2
-
 
 !> @ingroup fms_io_utils_mod
 interface parse_mask_table
@@ -188,16 +176,6 @@ interface get_data_type_string
   module procedure get_data_type_string_5d
 end interface get_data_type_string
 
-!> @ingroup fms_io_utils_mod
-interface get_checksum
-  module procedure get_checksum_0d
-  module procedure get_checksum_1d
-  module procedure get_checksum_2d
-  module procedure get_checksum_3d
-  module procedure get_checksum_4d
-  module procedure get_checksum_5d
-end interface get_checksum
-
 !> @addtogroup fms_io_utils_mod
 !> @{
 contains
@@ -237,36 +215,6 @@ subroutine openmp_thread_trap()
     endif
 #endif
 end subroutine openmp_thread_trap
-
-
-!> @brief Safely copy a string from one buffer to another.
-subroutine string_copy(dest, source, check_for_null)
-  character(len=*), intent(inout) :: dest !< Destination string.
-  character(len=*), intent(in) :: source !< Source string.
-  logical, intent(in), optional :: check_for_null !<Flag indicating to test for null character
-
-  integer :: i
-  logical :: check_null
-
-  check_null = .false.
-  if (present(check_for_null)) check_null = check_for_null
-
-  i = 0
-  if (check_null) then
-     i = index(source, char(0)) - 1
-  endif
-
-  if (i < 1 ) i = len_trim(source)
-
-  if (len_trim(source(1:i)) .gt. len(dest)) then
-    call error("The input destination string is not big enough to" &
-                 //" to hold the input source string.")
-  endif
-  dest = ""
-  dest = adjustl(trim(source(1:i)))
-
-end subroutine string_copy
-
 
 !> @brief Compare strings.
 !! @return Flag telling if the strings are the same.
@@ -402,11 +350,11 @@ subroutine domain_tile_filepath_mangle(dest, source, domain_tile_id)
   integer :: i
 
   if (has_domain_tile_string(source)) then
-    call error("this file has already had a domain tile id added.")
+    call error("The file "//trim(source)//" has a domain tile id (tileX) added. Check your open_file call")
   endif
   i = index(trim(source), ".nc", back=.true.)
   if (i .eq. 0) then
-    call error("file "//trim(source)//" does not contain .nc")
+    call error("The file "//trim(source)//" does not contain .nc. Check your open_file call")
   endif
   write(dest, '(a,i0,a)') source(1:i-1)//".tile", &
                           domain_tile_id, source(i:len_trim(source))
@@ -448,7 +396,8 @@ subroutine io_domain_tile_filepath_mangle(dest, source, io_domain_tile_id)
   integer, intent(in) :: io_domain_tile_id !< I/O domain tile id.
 
   if (has_io_domain_tile_string(source)) then
-    call error("this file has already had a domain tile id added.")
+    call error("The file "//trim(source)// &
+             & " has already had a domain tile id (.nc.XXXX) added. Check your open_file call.")
   endif
   write(dest,'(a,i4.4)') trim(source)//".", io_domain_tile_id
 end subroutine io_domain_tile_filepath_mangle
@@ -483,7 +432,7 @@ subroutine restart_filepath_mangle(dest, source)
   else
     i = index(trim(source), ".nc", back=.true.)
     if (i .eq. 0) then
-      call error("file "//trim(source)//" does not contain .nc")
+      call error("The file "//trim(source)//" does not contain .nc. Check your open_file call")
     endif
   endif
   call string_copy(dest, source(1:i-1)//".res"//source(i:len_trim(source)))
@@ -505,15 +454,20 @@ end subroutine open_check
 
 !> @brief Read the ascii text from filename `ascii_filename`into string array
 !! `ascii_var`
-subroutine ascii_read(ascii_filename, ascii_var)
+subroutine ascii_read(ascii_filename, ascii_var, num_lines, max_length)
   character(len=*), intent(in) :: ascii_filename !< The file name to be read
   character(len=:), dimension(:), allocatable, intent(out) :: ascii_var !< The
                                                                         !! string
                                                                         !! array
+  integer, optional, intent(out) :: num_lines !< Optional argument to return number of lines in file
+  integer, optional, intent(out) :: max_length !< Optional argument to return max_length of line in file
   integer, dimension(2) :: lines_and_length !< lines = 1, length = 2
+  if(allocated(ascii_var)) deallocate(ascii_var)
   lines_and_length = get_ascii_file_num_lines_and_length(ascii_filename)
   allocate(character(len=lines_and_length(2))::ascii_var(lines_and_length(1)))
   call read_ascii_file(ascii_filename, lines_and_length(2), ascii_var)
+  if(present(num_lines)) num_lines = lines_and_length(1)
+  if(present(max_length)) max_length = lines_and_length(2)
 end subroutine ascii_read
 
 !> @brief Populate 2D maskmap from mask_table given a model
@@ -592,7 +546,8 @@ subroutine parse_mask_table_2d(mask_table, maskmap, modelname)
         if (iocheck > 0) then
             call mpp_error(FATAL, "fms2_io(parse_mask_table_2d): Error in reading mask_list from record variable")
         elseif (iocheck < 0) then
-            call mpp_error(FATAL, "fms2_io(parse_mask_table_2d): Error: mask_list not completely read from record variable")
+            call mpp_error(FATAL, &
+                        &  "fms2_io(parse_mask_table_2d): Error: mask_list not completely read from record variable")
         endif
      enddo
 
@@ -606,7 +561,7 @@ subroutine parse_mask_table_2d(mask_table, maskmap, modelname)
      maskmap(mask_list(n,1),mask_list(n,2)) = .false.
   enddo
 
-  deallocate(mask_list)
+  deallocate(mask_list, mask_table_contents)
 
 end subroutine parse_mask_table_2d
 
@@ -695,7 +650,8 @@ subroutine parse_mask_table_3d(mask_table, maskmap, modelname)
         if (iocheck > 0) then
             call mpp_error(FATAL, "fms2_io(parse_mask_table_3d): Error in reading mask_list from record variable")
         elseif (iocheck < 0) then
-            call mpp_error(FATAL, "fms2_io(parse_mask_table_3d): Error: mask_list not completely read from record variable")
+            call mpp_error(FATAL, &
+                          &  "fms2_io(parse_mask_table_3d): Error: mask_list not completely read from record variable")
         endif
      enddo
 
@@ -709,8 +665,7 @@ subroutine parse_mask_table_3d(mask_table, maskmap, modelname)
   do n = 1, nmask
      maskmap(mask_list(n,1),mask_list(n,2),mask_list(n,3)) = .false.
   enddo
-
-  deallocate(mask_list)
+  deallocate(mask_list, mask_table_contents)
 end subroutine parse_mask_table_3d
 
 !> @brief Determine tile_file for structured grid based on filename and current
@@ -735,7 +690,7 @@ subroutine get_mosaic_tile_file_sg(file_in, file_out, is_no_domain, domain, tile
   else
      lens = len_trim(file_in)
      if(file_in(lens-2:lens) .NE. '.nc') call mpp_error(FATAL, &
-          'fms_io_mod: .nc should be at the end of file '//trim(file_in))
+          'get_mosaic_tile_file_sg: .nc should be at the end of file '//trim(file_in))
      basefile = file_in(1:lens-3)
   end if
 
@@ -874,49 +829,9 @@ subroutine get_instance_filename(name_in,name_out)
 
 end subroutine get_instance_filename
 
-function string_from_integer2(n)
-    integer, intent(in) :: n
-    character(len=16) :: string_from_integer2
-    if(n<0) then
-       call mpp_error(FATAL, 'fms2_io_mod: n should be non-negative integer, contact developer')
-    else if( n<10 ) then
-       write(string_from_integer2,'(i1)') n
-    else if( n<100 ) then
-       write(string_from_integer2,'(i2)') n
-    else if( n<1000 ) then
-       write(string_from_integer2,'(i3)') n
-    else if( n<10000 ) then
-       write(string_from_integer2,'(i4)') n
-    else if( n<100000 ) then
-       write(string_from_integer2,'(i5)') n
-    else if( n<1000000 ) then
-       write(string_from_integer2,'(i6)') n
-    else if( n<10000000 ) then
-       write(string_from_integer2,'(i7)') n
-    else if( n<100000000 ) then
-       write(string_from_integer2,'(i8)') n
-    else
-       call mpp_error(FATAL, 'fms2_io_mod: n is greater than 1e8, contact developer')
-    end if
-
-    return
-
-end function string_from_integer2
-
-function string_from_real2(a)
-    real, intent(in) :: a
-    character(len=32) :: string_from_real2
-
-    write(string_from_real2,*) a
-
-    return
-
-end function string_from_real2
-
 include "array_utils.inc"
 include "array_utils_char.inc"
 include "get_data_type_string.inc"
-include "get_checksum.inc"
 
 
 end module fms_io_utils_mod

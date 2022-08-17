@@ -17,9 +17,11 @@
 !* You should have received a copy of the GNU Lesser General Public
 !* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
 !***********************************************************************
+!> @addtogroup mpp_domains_mod
+!> @{
+    !> Updates data domain of 3D field whose computational domains have been computed
     subroutine MPP_DO_UPDATE_3D_V_(f_addrsx,f_addrsy, domain, update_x, update_y, &
                                    d_type, ke, gridtype, flags)
-!updates data domain of 3D field whose computational domains have been computed
       integer(i8_kind),  intent(in)        :: f_addrsx(:,:), f_addrsy(:,:)
       type(domain2d),      intent(in)        :: domain
       type(overlapSpec),   intent(in)        :: update_x, update_y
@@ -902,7 +904,8 @@
                end select
             end if
          end if
-      else if( BTEST(domain%fold,SOUTH) .AND. (.NOT.BTEST(update_flags,SCALAR_BIT)) )then      ! ---southern boundary fold
+      else if( BTEST(domain%fold,SOUTH) .AND. (.NOT.BTEST(update_flags,SCALAR_BIT)) )then      ! ---southern
+                                                                                               !! boundary fold
          ! NOTE: symmetry is assumed for fold-south boundary
          j = domain%y(1)%global%begin
          if( domain%y(1)%data%begin.LE.j .AND. j.LE.domain%y(1)%data%end+shift )then !fold is within domain
@@ -996,7 +999,8 @@
                end select
             end if
          end if
-      else if( BTEST(domain%fold,WEST) .AND. (.NOT.BTEST(update_flags,SCALAR_BIT)) )then      ! ---eastern boundary fold
+      else if( BTEST(domain%fold,WEST) .AND. (.NOT.BTEST(update_flags,SCALAR_BIT)) )then      ! ---eastern
+                                                                                              !! boundary fold
          ! NOTE: symmetry is assumed for fold-west boundary
          i = domain%x(1)%global%begin
          if( domain%x(1)%data%begin.LE.i .AND. i.LE.domain%x(1)%data%end+shift )then !fold is within domain
@@ -1090,7 +1094,8 @@
                end select
             end if
          end if
-      else if( BTEST(domain%fold,EAST) .AND. (.NOT.BTEST(update_flags,SCALAR_BIT)) )then      ! ---eastern boundary fold
+      else if( BTEST(domain%fold,EAST) .AND. (.NOT.BTEST(update_flags,SCALAR_BIT)) )then      ! ---eastern
+                                                                                              !! boundary fold
          ! NOTE: symmetry is assumed for fold-west boundary
          i = domain%x(1)%global%end+shift
          if( domain%x(1)%data%begin.LE.i .AND. i.LE.domain%x(1)%data%end+shift )then !fold is within domain
@@ -1193,3 +1198,4 @@
       return
 
     end subroutine MPP_DO_UPDATE_3D_V_
+!> @}

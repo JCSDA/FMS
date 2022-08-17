@@ -19,7 +19,8 @@
 !* You should have received a copy of the GNU Lesser General Public
 !* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
 !***********************************************************************
-
+!> @addtogroup mpp_domains_mod
+!> @{
 subroutine MPP_GLOBAL_SUM_AD_( domain, field, gsum_, flags, position, tile_count, overflow_check)
     MPP_TYPE_ :: MPP_GLOBAL_SUM_
     type(domain2D), intent(in) :: domain
@@ -48,16 +49,19 @@ subroutine MPP_GLOBAL_SUM_AD_( domain, field, gsum_, flags, position, tile_count
 
     call mpp_get_domain_shift(domain, ishift, jshift, position)
 
-    if( size(field,1).EQ.domain%x(tile)%compute%size+ishift .AND. size(field,2).EQ.domain%y(tile)%compute%size+jshift )then
+    if( size(field,1).EQ.domain%x(tile)%compute%size+ishift .AND. &
+      & size(field,2).EQ.domain%y(tile)%compute%size+jshift )then
 !field is on compute domain
         ioff = -domain%x(tile)%compute%begin + 1
         joff = -domain%y(tile)%compute%begin + 1
-    else if( size(field,1).EQ.domain%x(tile)%memory%size+ishift .AND. size(field,2).EQ.domain%y(tile)%memory%size+jshift )then
+    else if( size(field,1).EQ.domain%x(tile)%memory%size+ishift .AND. &
+           & size(field,2).EQ.domain%y(tile)%memory%size+jshift )then
 !field is on data domain
         ioff = -domain%x(tile)%data%begin + 1
         joff = -domain%y(tile)%data%begin + 1
     else
-        call mpp_error( FATAL, 'MPP_GLOBAL_SUM_: incoming field array must match either compute domain or data domain.' )
+        call mpp_error( FATAL, &
+                       &  'MPP_GLOBAL_SUM_: incoming field array must match either compute domain or data domain.' )
     end if
 
     if(domain%ntiles > MAX_TILES)  call mpp_error( FATAL,  &
@@ -137,7 +141,8 @@ subroutine MPP_GLOBAL_SUM_AD_( domain, field, gsum_, flags, position, tile_count
           end do
        end do
 #else
-        call mpp_error( FATAL, 'MPP_GLOBAL_SUM_: BITWISE_EFP_SUM is only implemented for real number, contact developer')
+        call mpp_error( FATAL, &
+                       &  'MPP_GLOBAL_SUM_: BITWISE_EFP_SUM is only implemented for real number, contact developer')
 #endif
     else  !this is not bitwise-exact across different PE counts
        ioffset = domain%x(tile)%loffset*ishift; joffset = domain%y(tile)%loffset*jshift
@@ -152,3 +157,4 @@ subroutine MPP_GLOBAL_SUM_AD_( domain, field, gsum_, flags, position, tile_count
 
     return
   end subroutine MPP_GLOBAL_SUM_AD_
+!> @}

@@ -24,6 +24,7 @@ program test_drifters_comm
   use drifters_comm_mod
   use mpp_mod
   use mpp_domains_mod
+  use fms_mod
 
   implicit none
 
@@ -58,14 +59,8 @@ program test_drifters_comm
   nt    = 10
 
   ! read input
-#ifdef INTERNAL_FILE_NML
   read (input_nml_file, drifters_comm_nml, iostat=io_status)
-#else
-  open(unit=1, file='input.nml', form='formatted')
-  read(1, drifters_comm_nml)
-  close(unit=1)
-  if(mpp_pe()==0) write(*,drifters_comm_nml)
-#endif
+  io_status = check_nml_error(io_status, 'test_drifters_comm')
 
   ! create global domain
   Lx = xmax - xmin

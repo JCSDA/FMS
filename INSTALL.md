@@ -9,6 +9,7 @@ The following external libraries are required when building libFMS
 * Fortran 2003 standard compiler
 * Fortran compiler that supports Cray Pointer
 * MPI C and Fortran headers and libraries (optional)
+* Libyaml header and libraries (optional)
 * Linux or Unix style system
 
 ## Supported Compilers
@@ -30,6 +31,18 @@ libFMS can be built without MPI support (sometimes called "no-comm mode").  To
 build libFMS without MPI support, pass to `configure` the `--disable-mpi` flag.
 
 ## Supported Build Systems
+
+The FMS repository has two build systems in place, GNU autotools and CMake.
+It is also compiled with the GFDL's internally-developed build tool, [mkmf](https://github.com/noaa-gfdl/mkmf)
+
+CMake and Autotools have some variation in options and the resulting build targets.
+
+Autotools will build with 64 bit real defaults unless configured with `--enable-mixed-mode` in
+which case it will default to 32 bit reals and add overloads to allow for both 32 bit and 64 bit
+operations. This results in one library with both 32 bit and 64 bit routines (defaulting to 32 bit reals).
+
+By default CMake will build the library with 32 bit reals. It also has an option for 64 bit defaults
+, and if enabled will build an additional library with 64 bit reals. This results in distinct 32 bit and 64 bit libraries (libfms_r4.a and libfms_r8.a)
 
 ### GNU Autoconf/Automake
 
@@ -56,10 +69,13 @@ configure option will require the user to give all required flags.
 
 Run `./configure --help` to see other available configure options.
 
+For more information on building with autotools and build options please see
+ [BUILD_SYSTEM.md](https://github.com/NOAA-GFDL/FMS/blob/main/libFMS/BUILD_SYSTEM.md)
+
 ### CMake
 
 To build using CMake, follow the instructions in
-[CMAKE_INSTRUCTIONS.mk](https://github.com/NOAA-GFDL/FMS/blob/master/CMAKE_INSTRUCTIONS.md).
+[CMAKE_INSTRUCTIONS.mk](https://github.com/NOAA-GFDL/FMS/blob/main/CMAKE_INSTRUCTIONS.md).
 Currently the CMake configuration is the most restrictive build option as the
 compiler flags are immutable.
 

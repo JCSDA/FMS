@@ -21,9 +21,10 @@
 !***********************************************************************
 
 !> @file
-!> @ingroup mpp_domains_mod
 !> @brief Routines for domain communications via @ref domaincommunicator2d
 
+!> @addtogroup mpp_domains_mod
+!> @{
     function mpp_redistribute_init_comm(domain_in,l_addrs_in, domain_out,l_addrs_out, &
                                         isize_in,jsize_in,ksize_in,isize_out,jsize_out,ksize_out) RESULT(d_comm)
       type(DomainCommunicator2D), pointer       :: d_comm
@@ -66,7 +67,8 @@
                call mpp_error( FATAL, 'MPP_REDISTRIBUTE_INIT_COMM: mismatch between field_in and field_out.' )
           ke = ksize_out
       end if
-      if( ke == 0 )call mpp_error( FATAL, 'MPP_REDISTRIBUTE_INIT_COMM: either domain_in or domain_out must be native.' )
+      if( ke == 0 )call mpp_error( FATAL, &
+         &  'MPP_REDISTRIBUTE_INIT_COMM: either domain_in or domain_out must be native.' )
 !check sizes
       if( domain_in%pe /= NULL_PE )then
           if( isize_in /= domain_in%x(1)%data%size .OR. jsize_in /= domain_in%y(1)%data%size ) &
@@ -192,8 +194,9 @@
          mpp_domains_stack_hwm = max( mpp_domains_stack_hwm, msgsize )
          if( mpp_domains_stack_hwm.GT.mpp_domains_stack_size )then
              write( text,'(i8)' )mpp_domains_stack_hwm
-             call mpp_error( FATAL, 'MPP_REDISTRIBUTE_INIT_COMM: mpp_domains_stack overflow, call mpp_domains_set_stack_size(' &
-                  //trim(text)//') from all PEs.' )
+             call mpp_error( FATAL, &
+                  & 'MPP_REDISTRIBUTE_INIT_COMM: mpp_domains_stack overflow, call mpp_domains_set_stack_size(' &
+                  & //trim(text)//') from all PEs.' )
          end if
       end if
 
@@ -203,7 +206,7 @@
 
     end function mpp_redistribute_init_comm
 
-
+    !> initializes a @ref DomainCommunicator2D type for use in @ref mpp_global_field
     function mpp_global_field_init_comm(domain,l_addr,isize_g,jsize_g,isize_l, &
                                         jsize_l, ksize,l_addr2,flags, position) RESULT(d_comm)
       type(DomainCommunicator2D), pointer       :: d_comm
@@ -256,7 +259,8 @@
         ioff = -domain%x(1)%data%begin + 1
         joff = -domain%y(1)%data%begin + 1
       else
-        call mpp_error(FATAL,'MPP_GLOBAL_FIELD_INIT_COMM: incoming field array must match either compute domain or data domain.')
+        call mpp_error(FATAL, &
+                 & 'MPP_GLOBAL_FIELD_INIT_COMM: incoming field array must match either compute domain or data domain.')
       endif
 
     ! Create unique domain identifier
@@ -415,8 +419,9 @@
          mpp_domains_stack_hwm = max( mpp_domains_stack_hwm, msgsize )
          if( mpp_domains_stack_hwm.GT.mpp_domains_stack_size )then
              write( text,'(i8)' )mpp_domains_stack_hwm
-             call mpp_error( FATAL, 'MPP_GLOBAL_FIELD_INIT_COMM: mpp_domains_stack overflow, call mpp_domains_set_stack_size(' &
-                  //trim(text)//') from all PEs.' )
+             call mpp_error( FATAL, &
+                  & 'MPP_GLOBAL_FIELD_INIT_COMM: mpp_domains_stack overflow, call mpp_domains_set_stack_size(' &
+                  & //trim(text)//') from all PEs.' )
          end if
       end if
 
@@ -745,6 +750,4 @@
          endif
        end if
     end function set_domain_id
-
-
-!#######################################################################
+!> @}

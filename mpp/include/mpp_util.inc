@@ -20,8 +20,10 @@
 !* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
 !***********************************************************************
 !> @file
-!> @ingroup mpp_mod
 !> @brief General utility functions for use in @ref mpp_mod
+
+!> @addtogroup mpp_mod
+!> @{
 
 #if defined(use_libMPI)
 #include <mpp_util_mpi.inc>
@@ -29,18 +31,6 @@
 #include <mpp_util_nocomm.inc>
 #endif
 
-  !#####################################################################
-  ! <FUNCTION NAME="stdin">
-  !  <OVERVIEW>
-  !    Standard fortran unit numbers.
-  !  </OVERVIEW>
-  !  <DESCRIPTION>
-  !    This function returns the current standard fortran unit numbers for input.
-  !  </DESCRIPTION>
-  !  <TEMPLATE>
-  !   stdin()
-  !  </TEMPLATE>
-  ! </FUNCTION>
   !> @brief This function returns the current standard fortran unit numbers for input.
   function stdin()
     integer :: stdin
@@ -48,18 +38,6 @@
     return
   end function stdin
 
-  !#####################################################################
-  ! <FUNCTION NAME="stdout">
-  !  <OVERVIEW>
-  !    Standard fortran unit numbers.
-  !  </OVERVIEW>
-  !  <DESCRIPTION>
-  !    This function returns the current  standard fortran unit numbers for output.
-  !  </DESCRIPTION>
-  !  <TEMPLATE>
-  !   stdout()
-  !  </TEMPLATE>
-  ! </FUNCTION>
   !> @brief This function returns the current  standard fortran unit numbers for output.
   function stdout()
     integer :: stdout
@@ -68,18 +46,6 @@
     return
   end function stdout
 
-  !#####################################################################
-  ! <FUNCTION NAME="stderr">
-  !  <OVERVIEW>
-  !    Standard fortran unit numbers.
-  !  </OVERVIEW>
-  !  <DESCRIPTION>
-  !    This function returns the current standard fortran unit numbers for error messages.
-  !  </DESCRIPTION>
-  !  <TEMPLATE>
-  !   stderr()
-  !  </TEMPLATE>
-  ! </FUNCTION>
   !> @brief This function returns the current standard fortran unit numbers for error messages.
   function stderr()
     integer :: stderr
@@ -87,23 +53,10 @@
     return
   end function stderr
 
-  !#####################################################################
-  ! <FUNCTION NAME="stdlog">
-  !  <OVERVIEW>
-  !    Standard fortran unit numbers.
-  !  </OVERVIEW>
-  !  <DESCRIPTION>
-  !    This function returns the current  standard fortran unit numbers for log messages.
-  !    Log messages, by convention, are written to the file <TT>logfile.out</TT>.
-  !  </DESCRIPTION>
-  !  <TEMPLATE>
-  !    stdlog()
-  !  </TEMPLATE>
-  ! </FUNCTION>
   !> @brief This function returns the current  standard fortran unit numbers for log messages.
   !!    Log messages, by convention, are written to the file <TT>logfile.out</TT>.
   function stdlog()
-    integer :: stdlog,istat
+    integer :: stdlog
     logical :: opened
     character(len=11) :: this_pe
 !$  logical           :: omp_in_parallel
@@ -133,16 +86,15 @@
        if( opened )then
           FLUSH(log_unit)
        else
-          log_unit=get_unit()
-          open( unit=log_unit, status='UNKNOWN', file=trim(configfile)//this_pe, position='APPEND', err=10 )
+          open(newunit=log_unit, status='UNKNOWN', file=trim(configfile)//this_pe, position='APPEND', err=10 )
        end if
        stdlog = log_unit
     else
-       inquire( unit=etc_unit, opened=opened )
+       inquire(unit=etc_unit, opened=opened )
        if( opened )then
           FLUSH(etc_unit)
        else
-          open( unit=etc_unit, status='UNKNOWN', file=trim(etcfile), position='APPEND', err=11 )
+          open(newunit=etc_unit, status='UNKNOWN', file=trim(etcfile), position='APPEND', err=11 )
        end if
        stdlog = etc_unit
     end if
@@ -157,12 +109,11 @@
   logical :: exist
   character(len=11) :: this_pe
   if( pe.EQ.root_pe )then
-     log_unit = get_unit()
      do p=0,npes-1
        write(this_pe,'(a,i6.6,a)') '.',p,'.out'
        inquire( file=trim(configfile)//this_pe, exist=exist )
        if(exist)then
-         open( unit=log_unit, file=trim(configfile)//this_pe, status='REPLACE' )
+         open(newunit=log_unit, file=trim(configfile)//this_pe, status='REPLACE' )
          close(log_unit)
        endif
      end do
@@ -417,23 +368,8 @@ integer :: i, len_tmp, len_string
 
 end function rarray_to_char
 
-  !#####################################################################
-  ! <FUNCTION NAME="mpp_pe">
-  !  <OVERVIEW>
-  !    Returns processor ID.
-  !  </OVERVIEW>
-  !  <DESCRIPTION>
-  !    This returns the unique ID associated with a PE. This number runs
-  !    between 0 and <TT>npes-1</TT>, where <TT>npes</TT> is the total
-  !    processor count, returned by <TT>mpp_npes</TT>. For a uniprocessor
-  !    application this will always return 0.
-  !  </DESCRIPTION>
-  !  <TEMPLATE>
-  !    mpp_pe()
-  !  </TEMPLATE>
-  ! </FUNCTION>
-
   !> @brief Returns processor ID.
+  !!
   !> This returns the unique ID associated with a PE. This number runs
   !! between 0 and <TT>npes-1</TT>, where <TT>npes</TT> is the total
   !! processor count, returned by <TT>mpp_npes</TT>. For a uniprocessor
@@ -447,18 +383,7 @@ end function rarray_to_char
   end function mpp_pe
 
   !#####################################################################
-  ! <FUNCTION NAME="mpp_npes">
-  !  <OVERVIEW>
-  !    Returns processor count for current pelist.
-  !  </OVERVIEW>
-  !  <DESCRIPTION>
-  !    This returns the number of PEs in the current pelist. For a
-  !    uniprocessor application, this will always return 1.
-  !  </DESCRIPTION>
-  !  <TEMPLATE>
-  !    mpp_npes()
-  !  </TEMPLATE>
-  ! </FUNCTION>
+
   !> @brief Returns processor count for current pelist
   !!
   !> This returns the number of PEs in the current pelist. For a uniprocessor application,
@@ -483,56 +408,26 @@ end function rarray_to_char
   !#####################################################################
   subroutine mpp_set_root_pe(num)
     integer, intent(in) :: num
-    logical             :: opened
 
     if( .NOT.module_is_initialized )call mpp_error( FATAL, 'MPP_SET_ROOT_PE: You must first call mpp_init.' )
     if( .NOT.(ANY(num.EQ.peset(current_peset_num)%list(:))) ) &
          call mpp_error( FATAL, 'MPP_SET_ROOT_PE: you cannot set a root PE outside the current pelist.' )
-    !actions to take if root_pe has changed:
-    ! open log_unit on new root_pe, close it on old root_pe and point its log_unit to stdout.
-    !      if( num.NE.root_pe )then  !root_pe has changed
-    !          if( pe.EQ.num )then
-    !on the new root_pe
-    !              if( log_unit.NE.out_unit )then
-    !                  inquire( unit=log_unit, opened=opened )
-    !                  if( .NOT.opened )open( unit=log_unit, status='OLD', file=trim(configfile), position='APPEND' )
-    !              end if
-    !          else if( pe.EQ.root_pe )then
-    !on the old root_pe
-    !              if( log_unit.NE.out_unit )then
-    !                  inquire( unit=log_unit, opened=opened )
-    !                  if( opened )close(log_unit)
-    !                  log_unit = out_unit
-    !              end if
-    !          end if
-    !      end if
     root_pe = num
     return
   end subroutine mpp_set_root_pe
 
-  !#####################################################################
-  ! <SUBROUTINE NAME="mpp_declare_pelist">
-  !  <OVERVIEW>
-  !    Declare a pelist.
-  !  </OVERVIEW>
-  !  <DESCRIPTION>
-  !    This call is written specifically to accommodate a MPI restriction
-  !    that requires a parent communicator to create a child communicator, In
-  !    other words: a pelist cannot go off and declare a communicator, but
-  !    every PE in the parent, including those not in pelist(:), must get
-  !    together for the <TT>MPI_COMM_CREATE</TT> call. The parent is
-  !    typically <TT>MPI_COMM_WORLD</TT>, though it could also be a subset
-  !    that includes all PEs in <TT>pelist</TT>.
-  !
-  !    This call implies synchronization across the PEs in the current
-  !    pelist, of which <TT>pelist</TT> is a subset.
-  !  </DESCRIPTION>
-  !  <TEMPLATE>
-  !   call mpp_declare_pelist( pelist,name )
-  !  </TEMPLATE>
-  !  <IN NAME="pelist" DIM="(:)" TYPE="integer"></IN>
-  ! </SUBROUTINE>
-
+  !> @brief Declare a pelist.
+  !!
+  !> This call is written specifically to accommodate a MPI restriction
+  !! that requires a parent communicator to create a child communicator, In
+  !! other words: a pelist cannot go off and declare a communicator, but
+  !! every PE in the parent, including those not in pelist(:), must get
+  !! together for the <TT>MPI_COMM_CREATE</TT> call. The parent is
+  !! typically <TT>MPI_COMM_WORLD</TT>, though it could also be a subset
+  !! that includes all PEs in <TT>pelist</TT>.
+  !!
+  !! This call implies synchronization across the PEs in the current
+  !! pelist, of which <TT>pelist</TT> is a subset.
   subroutine mpp_declare_pelist( pelist, name )
     integer,                    intent(in) :: pelist(:)
     character(len=*), intent(in), optional :: name
@@ -546,29 +441,19 @@ end function rarray_to_char
   end subroutine mpp_declare_pelist
 
   !#####################################################################
-  ! <SUBROUTINE NAME="mpp_set_current_pelist">
-  !  <OVERVIEW>
-  !    Set context pelist.
-  !  </OVERVIEW>
-  !  <DESCRIPTION>
-  !    This call sets the value of the current pelist, which is the
-  !    context for all subsequent "global" calls where the optional
-  !    <TT>pelist</TT> argument is omitted. All the PEs that are to be in the
-  !    current pelist must call it.
-  !
-  !    In MPI, this call may hang unless <TT>pelist</TT> has been previous
-  !    declared using <LINK
-  !    SRC="#mpp_declare_pelist"><TT>mpp_declare_pelist</TT></LINK>.
-  !
-  !    If the argument <TT>pelist</TT> is absent, the current pelist is
-  !    set to the "world" pelist, of all PEs in the job.
-  !  </DESCRIPTION>
-  !  <TEMPLATE>
-  !    call mpp_set_current_pelist( pelist )
-  !  </TEMPLATE>
-  !  <IN NAME="pliest" TYPE="integer"></IN>
-  ! </SUBROUTINE>
 
+  !> @brief Set context pelist
+  !!
+  !! This call sets the value of the current pelist, which is the
+  !! context for all subsequent "global" calls where the optional
+  !! <TT>pelist</TT> argument is omitted. All the PEs that are to be in the
+  !! current pelist must call it.
+  !!
+  !! In MPI, this call may hang unless <TT>pelist</TT> has been previous
+  !! declared using @ref mpp_declare_pelist
+  !!
+  !! If the argument <TT>pelist</TT> is absent, the current pelist is
+  !! set to the "world" pelist, of all PEs in the job.
   subroutine mpp_set_current_pelist( pelist, no_sync )
     !Once we branch off into a PE subset, we want subsequent "global" calls to
     !sync only across this subset. This is declared as the current pelist (peset(current_peset_num)%list)
@@ -579,7 +464,6 @@ end function rarray_to_char
     !if pelist is omitted, we reset pelist to the world pelist.
     integer, intent(in), optional :: pelist(:)
     logical, intent(in), optional :: no_sync
-    integer                       :: i
 
     if( .NOT.module_is_initialized )call mpp_error( FATAL, 'MPP_SET_CURRENT_PELIST: You must first call mpp_init.' )
     if( PRESENT(pelist) )then
@@ -626,110 +510,101 @@ end function rarray_to_char
   !                        PERFORMANCE PROFILING CALLS                          !
   !                                                                             !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! <SUBROUTINE NAME="mpp_clock_set_grain">
-  !  <OVERVIEW>
-  !    Set the level of granularity of timing measurements.
-  !  </OVERVIEW>
-  !  <DESCRIPTION>
-  !    This routine and three other routines, mpp_clock_id, mpp_clock_begin(id),
-  !    and mpp_clock_end(id) may be used to time parallel code sections, and
-  !    extract parallel statistics. Clocks are identified by names, which
-  !    should be unique in the first 32 characters. The <TT>mpp_clock_id</TT>
-  !    call initializes a clock of a given name and returns an integer
-  !    <TT>id</TT>. This <TT>id</TT> can be used by subsequent
-  !    <TT>mpp_clock_begin</TT> and <TT>mpp_clock_end</TT> calls set around a
-  !    code section to be timed. Example:
-  !    <PRE>
-  !    integer :: id
-  !    id = mpp_clock_id( 'Atmosphere' )
-  !    call mpp_clock_begin(id)
-  !    call atmos_model()
-  !    call mpp_clock_end()
-  !    </PRE>
-  !     Two flags may be used to alter the behaviour of
-  !     <TT>mpp_clock</TT>. If the flag <TT>MPP_CLOCK_SYNC</TT> is turned on
-  !     by <TT>mpp_clock_id</TT>, the clock calls <TT>mpp_sync</TT> across all
-  !     the PEs in the current pelist at the top of the timed code section,
-  !     but allows each PE to complete the code section (and reach
-  !     <TT>mpp_clock_end</TT>) at different times. This allows us to measure
-  !     load imbalance for a given code section. Statistics are written to
-  !     <TT>stdout</TT> by <TT>mpp_exit</TT>.
-  !
-  !     The flag <TT>MPP_CLOCK_DETAILED</TT> may be turned on by
-  !     <TT>mpp_clock_id</TT> to get detailed communication
-  !     profiles. Communication events of the types <TT>SEND, RECV, BROADCAST,
-  !     REDUCE</TT> and <TT>WAIT</TT> are separately measured for data volume
-  !     and time. Statistics are written to <TT>stdout</TT> by
-  !     <TT>mpp_exit</TT>, and individual PE info is also written to the file
-  !     <TT>mpp_clock.out.####</TT> where <TT>####</TT> is the PE id given by
-  !     <TT>mpp_pe</TT>.
-  !
-  !     The flags <TT>MPP_CLOCK_SYNC</TT> and <TT>MPP_CLOCK_DETAILED</TT> are
-  !     integer parameters available by use association, and may be summed to
-  !     turn them both on.
-  !
-  !     While the nesting of clocks is allowed, please note that turning on
-  !     the non-optional flags on inner clocks has certain subtle issues.
-  !     Turning on <TT>MPP_CLOCK_SYNC</TT> on an inner
-  !     clock may distort outer clock measurements of load imbalance. Turning
-  !     on <TT>MPP_CLOCK_DETAILED</TT> will stop detailed measurements on its
-  !     outer clock, since only one detailed clock may be active at one time.
-  !     Also, detailed clocks only time a certain number of events per clock
-  !     (currently 40000) to conserve memory. If this array overflows, a
-  !     warning message is printed, and subsequent events for this clock are
-  !     not timed.
-  !
-  !     Timings are done using the <TT>f90</TT> standard
-  !     <TT>SYSTEM_CLOCK</TT> intrinsic.
-  !
-  !     The resolution of SYSTEM_CLOCK is often too coarse for use except
-  !     across large swaths of code. On SGI systems this is transparently
-  !     overloaded with a higher resolution clock made available in a
-  !     non-portable fortran interface made available by
-  !     <TT>nsclock.c</TT>. This approach will eventually be extended to other
-  !     platforms.
-  !
-  !     New behaviour added at the Havana release allows the user to embed
-  !     profiling calls at varying levels of granularity all over the code,
-  !     and for any particular run, set a threshold of granularity so that
-  !     finer-grained clocks become dormant.
-  !
-  !     The threshold granularity is held in the private module variable
-  !     <TT>clock_grain</TT>. This value may be modified by the call
-  !     <TT>mpp_clock_set_grain</TT>, and affect clocks initiated by
-  !     subsequent calls to <TT>mpp_clock_id</TT>. The value of
-  !     <TT>clock_grain</TT> is set to an arbitrarily large number initially.
-  !
-  !     Clocks initialized by <TT>mpp_clock_id</TT> can set a new optional
-  !     argument <TT>grain</TT> setting their granularity level. Clocks check
-  !     this level against the current value of <TT>clock_grain</TT>, and are
-  !     only triggered if they are <I>at or below ("coarser than")</I> the
-  !     threshold. Finer-grained clocks are dormant for that run.
-  !
-  !The following grain levels are pre-defined:
-  !
-  !<pre>
-  !!predefined clock granularities, but you can use any integer
-  !!using CLOCK_LOOP and above may distort coarser-grain measurements
-  !  integer, parameter, public :: CLOCK_COMPONENT=1 !component level, e.g model, exchange
-  !  integer, parameter, public :: CLOCK_SUBCOMPONENT=11 !top level within a model component, e.g dynamics, physics
-  !  integer, parameter, public :: CLOCK_MODULE=21 !module level, e.g main subroutine of a physics module
-  !  integer, parameter, public :: CLOCK_ROUTINE=31 !level of individual subroutine or function
-  !  integer, parameter, public :: CLOCK_LOOP=41 !loops or blocks within a routine
-  !  integer, parameter, public :: CLOCK_INFRA=51 !infrastructure level, e.g halo update
-  !</pre>
-  !
-  !     Note that subsequent changes to <TT>clock_grain</TT> do not
-  !     change the status of already initiated clocks, and that if the
-  !     optional <TT>grain</TT> argument is absent, the clock is always
-  !     triggered. This guarantees backward compatibility.
-  !  </DESCRIPTION>
-  !  <TEMPLATE>
-  !     call mpp_clock_set_grain( grain )
-  !  </TEMPLATE>
-  !  <IN NAME="grain" TYPE="integer"></IN>
-  ! </SUBROUTINE>
 
+  !> @brief Set the level of granularity of timing measurements.
+  !!
+  !> This routine and three other routines, mpp_clock_id, mpp_clock_begin(id),
+  !!    and mpp_clock_end(id) may be used to time parallel code sections, and
+  !!    extract parallel statistics. Clocks are identified by names, which
+  !!    should be unique in the first 32 characters. The <TT>mpp_clock_id</TT>
+  !!    call initializes a clock of a given name and returns an integer
+  !!    <TT>id</TT>. This <TT>id</TT> can be used by subsequent
+  !!    <TT>mpp_clock_begin</TT> and <TT>mpp_clock_end</TT> calls set around a
+  !!    code section to be timed. Example:
+  !!    <PRE>
+  !!    integer :: id
+  !!    id = mpp_clock_id( 'Atmosphere' )
+  !!    call mpp_clock_begin(id)
+  !!    call atmos_model()
+  !!    call mpp_clock_end()
+  !!    </PRE>
+  !!     Two flags may be used to alter the behaviour of
+  !!     <TT>mpp_clock</TT>. If the flag <TT>MPP_CLOCK_SYNC</TT> is turned on
+  !!     by <TT>mpp_clock_id</TT>, the clock calls <TT>mpp_sync</TT> across all
+  !!     the PEs in the current pelist at the top of the timed code section,
+  !!     but allows each PE to complete the code section (and reach
+  !!     <TT>mpp_clock_end</TT>) at different times. This allows us to measure
+  !!     load imbalance for a given code section. Statistics are written to
+  !!     <TT>stdout</TT> by <TT>mpp_exit</TT>.
+  !!
+  !!     The flag <TT>MPP_CLOCK_DETAILED</TT> may be turned on by
+  !!     <TT>mpp_clock_id</TT> to get detailed communication
+  !!     profiles. Communication events of the types <TT>SEND, RECV, BROADCAST,
+  !!     REDUCE</TT> and <TT>WAIT</TT> are separately measured for data volume
+  !!     and time. Statistics are written to <TT>stdout</TT> by
+  !!     <TT>mpp_exit</TT>, and individual PE info is also written to the file
+  !!     <TT>mpp_clock.out.####</TT> where <TT>####</TT> is the PE id given by
+  !!     <TT>mpp_pe</TT>.
+  !!
+  !!     The flags <TT>MPP_CLOCK_SYNC</TT> and <TT>MPP_CLOCK_DETAILED</TT> are
+  !!     integer parameters available by use association, and may be summed to
+  !!     turn them both on.
+  !!
+  !!     While the nesting of clocks is allowed, please note that turning on
+  !!     the non-optional flags on inner clocks has certain subtle issues.
+  !!     Turning on <TT>MPP_CLOCK_SYNC</TT> on an inner
+  !!     clock may distort outer clock measurements of load imbalance. Turning
+  !!     on <TT>MPP_CLOCK_DETAILED</TT> will stop detailed measurements on its
+  !!     outer clock, since only one detailed clock may be active at one time.
+  !!     Also, detailed clocks only time a certain number of events per clock
+  !!     (currently 40000) to conserve memory. If this array overflows, a
+  !!     warning message is printed, and subsequent events for this clock are
+  !!     not timed.
+  !!
+  !!     Timings are done using the <TT>f90</TT> standard
+  !!     <TT>SYSTEM_CLOCK</TT> intrinsic.
+  !!
+  !!     The resolution of SYSTEM_CLOCK is often too coarse for use except
+  !!     across large swaths of code. On SGI systems this is transparently
+  !!     overloaded with a higher resolution clock made available in a
+  !!     non-portable fortran interface made available by
+  !!     <TT>nsclock.c</TT>. This approach will eventually be extended to other
+  !!     platforms.
+  !!
+  !!     New behaviour added at the Havana release allows the user to embed
+  !!     profiling calls at varying levels of granularity all over the code,
+  !!     and for any particular run, set a threshold of granularity so that
+  !!     finer-grained clocks become dormant.
+  !!
+  !!     The threshold granularity is held in the private module variable
+  !!     <TT>clock_grain</TT>. This value may be modified by the call
+  !!     <TT>mpp_clock_set_grain</TT>, and affect clocks initiated by
+  !!     subsequent calls to <TT>mpp_clock_id</TT>. The value of
+  !!     <TT>clock_grain</TT> is set to an arbitrarily large number initially.
+  !!
+  !!     Clocks initialized by <TT>mpp_clock_id</TT> can set a new optional
+  !!     argument <TT>grain</TT> setting their granularity level. Clocks check
+  !!     this level against the current value of <TT>clock_grain</TT>, and are
+  !!     only triggered if they are <I>at or below ("coarser than")</I> the
+  !!     threshold. Finer-grained clocks are dormant for that run.
+  !!
+  !!The following grain levels are pre-defined:
+  !!
+  !!<pre>
+  !!!predefined clock granularities, but you can use any integer
+  !!!using CLOCK_LOOP and above may distort coarser-grain measurements
+  !!  integer, parameter, public :: CLOCK_COMPONENT=1 !component level, e.g model, exchange
+  !!  integer, parameter, public :: CLOCK_SUBCOMPONENT=11 !top level within a model component, e.g dynamics, physics
+  !!  integer, parameter, public :: CLOCK_MODULE=21 !module level, e.g main subroutine of a physics module
+  !!  integer, parameter, public :: CLOCK_ROUTINE=31 !level of individual subroutine or function
+  !!  integer, parameter, public :: CLOCK_LOOP=41 !loops or blocks within a routine
+  !!  integer, parameter, public :: CLOCK_INFRA=51 !infrastructure level, e.g halo update
+  !!</pre>
+  !!
+  !!     Note that subsequent changes to <TT>clock_grain</TT> do not
+  !!     change the status of already initiated clocks, and that if the
+  !!     optional <TT>grain</TT> argument is absent, the clock is always
+  !!     triggered. This guarantees backward compatibility.
   subroutine mpp_clock_set_grain( grain )
     integer, intent(in) :: grain
     !set the granularity of times: only clocks whose grain is lower than
@@ -793,12 +668,11 @@ end function rarray_to_char
   end subroutine clock_init
 
   !#####################################################################
-    !return an ID for a new or existing clock
+  !> Return an ID for a new or existing clock
   function mpp_clock_id( name, flags, grain )
     integer                       :: mpp_clock_id
     character(len=*),  intent(in) :: name
     integer, intent(in), optional :: flags, grain
-    integer                       :: i
 
     if( .NOT.module_is_initialized )call mpp_error( FATAL, 'MPP_CLOCK_ID: You must first call mpp_init.')
 
@@ -889,7 +763,8 @@ end function rarray_to_char
     delta = end_tick - clocks(id)%tick
     if( delta.LT.0 )then
        errunit = stderr()
-       write( errunit,* )'pe, id, start_tick, end_tick, delta, max_ticks=', pe, id, clocks(id)%tick, end_tick, delta, max_ticks
+       write( errunit,* )'pe, id, start_tick, end_tick, delta, max_ticks=', pe, id, clocks(id)%tick, end_tick, &
+            &  delta, max_ticks
        delta = delta + max_ticks + 1
        call mpp_error( WARNING, 'MPP_CLOCK_END: Clock rollover, assumed single roll.' )
     end if
@@ -929,13 +804,15 @@ end function rarray_to_char
 
     if( .not. mpp_record_timing_data )return
     if( .not.debug .or. (current_clock.EQ.0) )return
-    if( current_clock.LT.0 .OR. current_clock.GT.clock_num )call mpp_error( FATAL, 'MPP_CLOCK_BEGIN: invalid current_clock.' )
+    if( current_clock.LT.0 .OR. current_clock.GT.clock_num )call mpp_error( FATAL, &
+       &  'MPP_CLOCK_BEGIN: invalid current_clock.' )
     if( .NOT.clocks(current_clock)%detailed )return
     call SYSTEM_CLOCK(end_tick)
     n = clocks(current_clock)%events(event_id)%calls + 1
 
     if( n.EQ.MAX_EVENTS )call mpp_error( WARNING, &
-         'MPP_CLOCK: events exceed MAX_EVENTS, ignore detailed profiling data for clock '//trim(clocks(current_clock)%name) )
+         'MPP_CLOCK: events exceed MAX_EVENTS, ignore detailed profiling data for clock '// &
+         & trim(clocks(current_clock)%name) )
     if( n.GT.MAX_EVENTS )return
 
     clocks(current_clock)%events(event_id)%calls = n
@@ -959,7 +836,7 @@ end function rarray_to_char
     real              :: total_time,total_time_all,total_data
     real              :: msg_size,eff_BW,s
     integer           :: SD_UNIT, total_calls
-    integer           :: i,j,k,ct, msg_cnt
+    integer           :: j,k,ct, msg_cnt
     character(len=2)  :: u
     character(len=20) :: filename
     character(len=20),dimension(MAX_BINS),save :: bin
@@ -988,8 +865,7 @@ end function rarray_to_char
     if( .NOT.ANY(clocks(1:clock_num)%detailed) )return
     write( filename,'(a,i6.6)' )'mpp_clock.out.', pe
 
-    SD_UNIT = get_unit()
-    open(SD_UNIT,file=trim(filename),form='formatted')
+    open(newunit=SD_UNIT,file=trim(filename),form='formatted')
 
     COMM_TYPE: do ct = 1,clock_num
 
@@ -1008,7 +884,7 @@ end function rarray_to_char
           total_time = clock_summary(ct)%event(k)%total_time
           total_time_all = total_time_all + total_time
           total_data = clock_summary(ct)%event(k)%total_data
-          total_calls = clock_summary(ct)%event(k)%total_cnts
+          total_calls = int(clock_summary(ct)%event(k)%total_cnts)
 
           write(SD_UNIT,1000) clock_summary(ct)%event(k)%name(1:9) // ':'
 
@@ -1035,7 +911,7 @@ end function rarray_to_char
                 u = 'MB'
              endif
 
-             msg_cnt = clock_summary(ct)%event(k)%msg_size_cnts(j)
+             msg_cnt = int(clock_summary(ct)%event(k)%msg_size_cnts(j))
              msg_size = &
                   s*(clock_summary(ct)%event(k)%msg_size_sums(j)/real(msg_cnt))
              eff_BW = (1.0e-6)*( clock_summary(ct)%event(k)%msg_size_sums(j) / &
@@ -1055,7 +931,7 @@ end function rarray_to_char
 
           total_time = clock_summary(ct)%event(MAX_EVENT_TYPES)%total_time
           total_time_all = total_time_all + total_time
-          total_calls = clock_summary(ct)%event(MAX_EVENT_TYPES)%total_cnts
+          total_calls = int(clock_summary(ct)%event(MAX_EVENT_TYPES)%total_cnts)
 
           write(SD_UNIT,1000) clock_summary(ct)%event(MAX_EVENT_TYPES)%name(1:9) // ':'
 
@@ -1091,7 +967,8 @@ end function rarray_to_char
     integer,save :: i
     logical      :: l_open
 
-!  9 is reserved for etc_unit
+    if (pe == root_pe) call mpp_error(WARNING, &
+        'get_unit is deprecated and will be removed in a future release, please use the Fortran intrinsic newunit')
     do i=10,99
        inquire(unit=i,opened=l_open)
        if(.not.l_open)exit
@@ -1122,7 +999,7 @@ end function rarray_to_char
              clock_summary(ct)%event(j)%total_cnts = &
                   clock_summary(ct)%event(j)%total_cnts + 1
 
-             event_size = clocks(ct)%events(j)%bytes(i)
+             event_size = int(clocks(ct)%events(j)%bytes(i))
 
              k = find_bin(event_size)
 
@@ -1185,8 +1062,8 @@ end function rarray_to_char
   end subroutine sum_clock_data
 
   !#####################################################################
-  ! This routine will double the size of peset and copy the original peset data
-  ! into the expanded one. The maximum allowed to expand is PESET_MAX.
+  !> This routine will double the size of peset and copy the original peset data
+  !! into the expanded one. The maximum allowed to expand is PESET_MAX.
   subroutine expand_peset()
      integer :: old_peset_max,n
      type(communicator), allocatable :: peset_old(:)
@@ -1293,23 +1170,19 @@ end function rarray_to_char
 !
 ! THESE LINES MUST BE PRESENT IN MPP.F90
 !
-! ! parameter defining length of character variables
-!   integer, parameter :: INPUT_STR_LENGTH = 256
-! ! public variable needed for reading input.nml from an internal file
-!   character(len=INPUT_STR_LENGTH), dimension(:), allocatable, public :: input_nml_file
+! ! public variable needed for reading an input nml file from an internal file
+!   character(len=:), dimension(:), allocatable, public :: input_nml_file
 !
 
 !-----------------------------------------------------------------------
-! subroutine READ_INPUT_NML
-!
-!
-! Reads an existing input.nml into a character array and broadcasts
-! it to the non-root mpi-tasks. This allows the use of reads from an
-! internal file for namelist settings (requires 2003 compliant compiler)
-!
-! read(input_nml_file, nml=<name_nml>, iostat=status)
-!
-!
+
+!> Reads an existing input nml file into a character array and broadcasts
+!! it to the non-root mpi-tasks. This allows the use of reads from an
+!! internal file for namelist settings (requires 2003 compliant compiler)
+!!
+!! read(input_nml_file, nml=<name_nml>, iostat=status)
+!!
+!!
   subroutine read_input_nml(pelist_name_in, alt_input_nml_path)
 
 ! Include variable "version" to be written to log file.
@@ -1394,8 +1267,7 @@ end function rarray_to_char
        inquire(FILE=FILENAME, EXIST=file_exist)
 
        if ( file_exist ) then
-          f_unit = get_unit()
-          open(UNIT=f_unit, FILE=FILENAME, ACTION='READ', STATUS='OLD', IOSTAT=status)
+          open(newunit=f_unit, FILE=FILENAME, ACTION='READ', STATUS='OLD', IOSTAT=status)
 
           if ( status .ne. 0 ) then
              write (UNIT=text, FMT='(I5)') status
@@ -1405,7 +1277,11 @@ end function rarray_to_char
              num_lines = 1
              do
                 read (UNIT=f_unit, FMT='(A)', IOSTAT=status) str_tmp
-                if ( status .lt. 0 ) exit
+                if ( status .lt. 0 ) then
+                   ! deprecate num_lines by 1 and ensure num_lines is at least 1
+                   num_lines = max (num_lines - 1, 1)
+                   exit
+                endif
                 if ( status .gt. 0 ) then
                    write (UNIT=text, FMT='(I5)') num_lines
                    call mpp_error(FATAL, 'get_ascii_file_num_lines: Error reading line '//trim(text)// &
@@ -1413,8 +1289,8 @@ end function rarray_to_char
                 end if
                 if ( len_trim(str_tmp) == LENGTH ) then
                    write(UNIT=text, FMT='(I5)') length
-                   call mpp_error(FATAL, 'get_ascii_file_num_lines: Length of output string ('//trim(text)//' is too small.&
-                        & Increase the LENGTH value.')
+                   call mpp_error(FATAL, 'get_ascii_file_num_lines: Length of output string ('//trim(text)//&
+                                       & ' is too small. Increase the LENGTH value.')
                 end if
                 num_lines = num_lines + 1
              end do
@@ -1460,8 +1336,7 @@ end function rarray_to_char
        inquire(FILE=FILENAME, EXIST=file_exist)
 
        if ( file_exist ) then
-          f_unit = get_unit()
-          open(UNIT=f_unit, FILE=FILENAME, ACTION='READ', STATUS='OLD', IOSTAT=status)
+          open(newunit=f_unit, FILE=FILENAME, ACTION='READ', STATUS='OLD', IOSTAT=status)
 
           if ( status .ne. 0 ) then
              write (UNIT=text, FMT='(I5)') status
@@ -1472,7 +1347,11 @@ end function rarray_to_char
              max_length = 1
              do
                 read (UNIT=f_unit, FMT='(A)', IOSTAT=status) str_tmp
-                if ( status .lt. 0 ) exit
+                if ( status .lt. 0 ) then
+                   ! deprecate num_lines by 1 and ensure num_lines is at least 1
+                   num_lines = max (num_lines - 1, 1)
+                   exit
+                endif
                 if ( status .gt. 0 ) then
                    write (UNIT=text, FMT='(I5)') num_lines
                    call mpp_error(FATAL, 'get_ascii_file_num_lines: Error reading line '//trim(text)// &
@@ -1480,8 +1359,8 @@ end function rarray_to_char
                 end if
                 if ( len_trim(str_tmp) == LENGTH ) then
                    write(UNIT=text, FMT='(I5)') length
-                   call mpp_error(FATAL, 'get_ascii_file_num_lines: Length of output string ('//trim(text)//' is too small.&
-                        & Increase the LENGTH value.')
+                   call mpp_error(FATAL, 'get_ascii_file_num_lines: Length of output string ('//trim(text)//&
+                                       & ' is too small. Increase the LENGTH value.')
                 end if
                 if (len_trim(str_tmp) > max_length) max_length = len_trim(str_tmp)
                 num_lines = num_lines + 1
@@ -1511,19 +1390,18 @@ end function rarray_to_char
   ! subroutine READ_ASCII_FILE
   !
   !
-  ! Reads any ascii file into a character array and broadcasts
-  ! it to the non-root mpi-tasks.  Based off READ_INPUT_NML.
-  !
-  ! Passed in 'Content' array, must be of the form:
-  ! character(len=LENGTH), dimension(:), allocatable :: array_name
-  !
-  ! Reads from this array must be done in a do loop over the number of
-  ! lines, i.e.:
-  !
-  ! do i=1, num_lines
-  !    read (UNIT=array_name(i), FMT=*) var1, var2, ...
-  ! end do
-  !
+  !> Reads any ascii file into a character array and broadcasts
+  !! it to the non-root mpi-tasks.  Based off READ_INPUT_NML.
+  !!
+  !! Passed in 'Content' array, must be of the form:
+  !! character(len=LENGTH), dimension(:), allocatable :: array_name
+  !!
+  !! Reads from this array must be done in a do loop over the number of
+  !! lines, i.e.:
+  !!
+  !! do i=1, num_lines
+  !!    read (UNIT=array_name(i), FMT=*) var1, var2, ...
+  !! end do
   subroutine read_ascii_file(FILENAME, LENGTH, Content, PELIST)
     character(len=*),    intent(in)               :: FILENAME
     integer,             intent(in)               :: LENGTH
@@ -1535,9 +1413,10 @@ end function rarray_to_char
 
     character(len=5) :: text
     logical :: file_exist
-    integer :: status, i, f_unit, log_unit
+    integer :: status, f_unit, log_unit
     integer :: from_pe
     integer :: pnum_lines, num_lines
+    character(len=LENGTH) :: str_tmp !< Temporary variable to store line from file
 
     if( .NOT. read_ascii_file_on) then
        call mpp_error(FATAL,  &
@@ -1558,12 +1437,12 @@ end function rarray_to_char
        inquire(FILE=FILENAME, EXIST=file_exist)
 
        if ( file_exist ) then
-          f_unit = get_unit()
-          open(UNIT=f_unit, FILE=FILENAME, ACTION='READ', STATUS='OLD', IOSTAT=status)
+          open(newunit=f_unit, FILE=FILENAME, ACTION='READ', STATUS='OLD', IOSTAT=status)
 
           if ( status .ne. 0 ) then
              write (UNIT=text, FMT='(I5)') status
-             call mpp_error(FATAL, 'READ_ASCII_FILE: Error opening file: '//trim(FILENAME)//'.  (IOSTAT = '//trim(text)//')')
+             call mpp_error(FATAL, 'READ_ASCII_FILE: Error opening file: '// &
+                            & trim(FILENAME)//'.  (IOSTAT = '//trim(text)//')')
           else
 
              if ( num_lines .gt. 0 ) then
@@ -1579,22 +1458,28 @@ end function rarray_to_char
                    pnum_lines = 1
 
                    do
-                      read (UNIT=f_unit, FMT='(A)', IOSTAT=status) Content(pnum_lines)
+                      read (UNIT=f_unit, FMT='(A)', IOSTAT=status) str_tmp
 
-                      if ( status .lt. 0 ) exit
+                      if ( status .lt. 0 ) then
+                         ! deprecate pnum_lines by 1 and ensure pnum_lines is at least 1
+                         pnum_lines = max (pnum_lines - 1, 1)
+                         exit
+                      endif
                       if ( status .gt. 0 ) then
                          write (UNIT=text, FMT='(I5)') pnum_lines
-                         call mpp_error(FATAL, 'READ_ASCII_FILE: Error reading line '//trim(text)//' in file '//trim(FILENAME)//'.')
+                         call mpp_error(FATAL, 'READ_ASCII_FILE: Error reading line '// &
+                                        & trim(text)//' in file '//trim(FILENAME)//'.')
                       end if
                       if(pnum_lines > num_lines) then
                          call mpp_error(FATAL, 'READ_ASCII_FILE: number of lines in file '//trim(FILENAME)// &
                                 ' is greater than size(Content(:)). ')
                       end if
-                      if ( len_trim(Content(pnum_lines)) == LENGTH ) then
+                      if ( len_trim(str_tmp) == LENGTH ) then
                          write(UNIT=text, FMT='(I5)') length
-                         call mpp_error(FATAL, 'READ_ASCII_FILE: Length of output string ('//trim(text)//' is too small.&
-                              & Increase the LENGTH value.')
+                         call mpp_error(FATAL, 'READ_ASCII_FILE: Length of output string ('//trim(text)// &
+                                             & ' is too small. Increase the LENGTH value.')
                       end if
+                      Content(pnum_lines) = str_tmp
                       pnum_lines = pnum_lines + 1
                    end do
                    if(num_lines .NE. pnum_lines) then
@@ -1614,3 +1499,4 @@ end function rarray_to_char
     call mpp_broadcast(Content, LENGTH, from_pe, PELIST=PELIST)
 
   end subroutine read_ascii_file
+!> @}

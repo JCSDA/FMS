@@ -22,11 +22,7 @@
 !!
 !> Mainly routines for use via interfaces in @ref fms2_io_mod
 
-!> @file
-!> @brief File for @ref fms_netcdf_unstructured_domain_io_mod
-
 module fms_netcdf_unstructured_domain_io_mod
-use,intrinsic :: iso_fortran_env
 use netcdf
 use mpp_domains_mod
 use fms_io_utils_mod
@@ -105,7 +101,7 @@ function open_unstructured_domain_file(fileobj, path, mode, domain, nc_format, &
   !Get the input domain's I/O domain pelist.
   io_domain => mpp_get_ug_io_domain(domain)
   if (.not. associated(io_domain)) then
-    call error("input domain does not have an io_domain.")
+    call error("The input domain associated with the file:"//trim(fileobj%path)//" does not have an io_domain.")
   endif
   pelist_size = mpp_get_ug_domain_npes(io_domain)
   allocate(pelist(pelist_size))

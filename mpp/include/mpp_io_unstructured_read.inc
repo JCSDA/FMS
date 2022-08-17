@@ -18,12 +18,11 @@
 !***********************************************************************
 
 !> @file
-!> @ingroup mpp_io_mod
 !> @brief Parallel file reads for unstructured grids, used in @ref mpp_io_mod
-!----------
-!ug support
 
-!------------------------------------------------------------------------------
+!> @addtogroup mpp_io_mod
+!> @{
+
 !>Read in one-dimensional data for a field associated with an unstructured
 !!mpp domain.
 subroutine mpp_io_unstructured_read_r8_1D(funit, &
@@ -43,15 +42,18 @@ subroutine mpp_io_unstructured_read_r8_1D(funit, &
     integer(i4_kind),intent(in),optional              :: tindex    !<Time level index for a NetCDF file.
     integer(i4_kind),dimension(:),intent(in),optional :: start     !<Corner indices for a NetCDF file.
     integer(i4_kind),dimension(:),intent(in),optional :: nread     !<Edge lengths for a NetCDF file.
-    integer(i4_kind),intent(in),optional              :: threading !<Flag telling whether one or multiple ranks will read the file.
+    integer(i4_kind),intent(in),optional              :: threading !<Flag telling whether one or multiple
+                                                                   !! ranks will read the file.
 
    !Local variables
-    integer(i4_kind)                          :: threading_flag !<Flag telling whether one or multiple ranks will read the file.  This defaults to MPP_SINGLE.
+    integer(i4_kind)                          :: threading_flag !<Flag telling whether one or multiple
+                                                             !! ranks will read the file.  This defaults to MPP_SINGLE.
     type(domainUG),pointer                     :: io_domain      !<Pointer to the unstructured I/O domain.
     integer(i4_kind)                          :: io_domain_npes !<The total number of ranks in an I/O domain pelist.
     integer(i4_kind),dimension(:),allocatable :: pelist         !<A pelist.
     integer(i4_kind)                          :: p              !<Loop variable.
-    logical(l4_kind)                          :: compute_chksum !<Flag telling whether or not a check-sum of the read-in data is calculated.
+    logical(l4_kind)                          :: compute_chksum !<Flag telling whether or not a check-sum
+                                                                !! of the read-in data is calculated.
     integer(i8_kind)                         :: chk            !<Calculated check-sum for the read in data.
 
    !Start the mpp timer.
@@ -222,15 +224,18 @@ subroutine mpp_io_unstructured_read_r8_2D(funit, &
     integer(i4_kind),intent(in),optional              :: tindex    !<Time level index for a NetCDF file.
     integer(i4_kind),dimension(:),intent(in),optional :: start     !<Corner indices for a NetCDF file.
     integer(i4_kind),dimension(:),intent(in),optional :: nread     !<Edge lengths for a NetCDF file.
-    integer(i4_kind),intent(in),optional              :: threading !<Flag telling whether one or multiple ranks will read the file.
+    integer(i4_kind),intent(in),optional              :: threading !<Flag telling whether one or multiple
+                                                                   !! ranks will read the file.
 
    !Local variables
-    integer(i4_kind)                          :: threading_flag !<Flag telling whether one or multiple ranks will read the file.  This defaults to MPP_SINGLE.
+    integer(i4_kind)                          :: threading_flag !<Flag telling whether one or multiple
+                                                             !! ranks will read the file.  This defaults to MPP_SINGLE.
     type(domainUG),pointer                     :: io_domain      !<Pointer to the unstructured I/O domain.
     integer(i4_kind)                          :: io_domain_npes !<The total number of ranks in an I/O domain pelist.
     integer(i4_kind),dimension(:),allocatable :: pelist         !<A pelist.
     integer(i4_kind)                          :: p              !<Loop variable.
-    logical(l4_kind)                          :: compute_chksum !<Flag telling whether or not a check-sum of the read-in data is calculated.
+    logical(l4_kind)                          :: compute_chksum !<Flag telling whether or not a check-sum
+                                                                !! of the read-in data is calculated.
     integer(i8_kind)                         :: chk            !<Calculated check-sum for the read in data.
 
    !Start the mpp timer.
@@ -401,15 +406,18 @@ subroutine mpp_io_unstructured_read_r8_3D(funit, &
     integer(i4_kind),intent(in),optional              :: tindex    !<Time level index for a NetCDF file.
     integer(i4_kind),dimension(:),intent(in),optional :: start     !<Corner indices for a NetCDF file.
     integer(i4_kind),dimension(:),intent(in),optional :: nread     !<Edge lengths for a NetCDF file.
-    integer(i4_kind),intent(in),optional              :: threading !<Flag telling whether one or multiple ranks will read the file.
+    integer(i4_kind),intent(in),optional              :: threading !<Flag telling whether one or multiple
+                                                                   !! ranks will read the file.
 
    !Local variables
-    integer(i4_kind)                          :: threading_flag !<Flag telling whether one or multiple ranks will read the file.  This defaults to MPP_SINGLE.
+    integer(i4_kind)                          :: threading_flag !<Flag telling whether one or multiple
+                                                             !! ranks will read the file.  This defaults to MPP_SINGLE.
     type(domainUG),pointer                     :: io_domain      !<Pointer to the unstructured I/O domain.
     integer(i4_kind)                          :: io_domain_npes !<The total number of ranks in an I/O domain pelist.
     integer(i4_kind),dimension(:),allocatable :: pelist         !<A pelist.
     integer(i4_kind)                          :: p              !<Loop variable.
-    logical(l4_kind)                          :: compute_chksum !<Flag telling whether or not a check-sum of the read-in data is calculated.
+    logical(l4_kind)                          :: compute_chksum !<Flag telling whether or not a check-sum
+                                                                !! of the read-in data is calculated.
     integer(i8_kind)                         :: chk            !<Calculated check-sum for the read in data.
 
    !Start the mpp timer.
@@ -584,15 +592,18 @@ subroutine mpp_io_unstructured_read_r4_1D(funit, &
     integer(i4_kind),intent(in),optional              :: tindex    !<Time level index for a NetCDF file.
     integer(i4_kind),dimension(:),intent(in),optional :: start     !<Corner indices for a NetCDF file.
     integer(i4_kind),dimension(:),intent(in),optional :: nread     !<Edge lengths for a NetCDF file.
-    integer(i4_kind),intent(in),optional              :: threading !<Flag telling whether one or multiple ranks will read the file.
+    integer(i4_kind),intent(in),optional              :: threading !<Flag telling whether one or multiple
+                                                                   !! ranks will read the file.
 
    !Local variables
-    integer(i4_kind)                          :: threading_flag !<Flag telling whether one or multiple ranks will read the file.  This defaults to MPP_SINGLE.
+    integer(i4_kind)                          :: threading_flag !<Flag telling whether one or multiple
+                                                             !! ranks will read the file.  This defaults to MPP_SINGLE.
     type(domainUG),pointer                     :: io_domain      !<Pointer to the unstructured I/O domain.
     integer(i4_kind)                          :: io_domain_npes !<The total number of ranks in an I/O domain pelist.
     integer(i4_kind),dimension(:),allocatable :: pelist         !<A pelist.
     integer(i4_kind)                          :: p              !<Loop variable.
-    logical(l4_kind)                          :: compute_chksum !<Flag telling whether or not a check-sum of the read-in data is calculated.
+    logical(l4_kind)                          :: compute_chksum !<Flag telling whether or not a check-sum
+                                                                !! of the read-in data is calculated.
     integer(i8_kind)                         :: chk            !<Calculated check-sum for the read in data.
 
    !Start the mpp timer.
@@ -763,15 +774,18 @@ subroutine mpp_io_unstructured_read_r4_2D(funit, &
     integer(i4_kind),intent(in),optional              :: tindex    !<Time level index for a NetCDF file.
     integer(i4_kind),dimension(:),intent(in),optional :: start     !<Corner indices for a NetCDF file.
     integer(i4_kind),dimension(:),intent(in),optional :: nread     !<Edge lengths for a NetCDF file.
-    integer(i4_kind),intent(in),optional              :: threading !<Flag telling whether one or multiple ranks will read the file.
+    integer(i4_kind),intent(in),optional              :: threading !<Flag telling whether one or multiple
+                                                                   !! ranks will read the file.
 
    !Local variables
-    integer(i4_kind)                          :: threading_flag !<Flag telling whether one or multiple ranks will read the file.  This defaults to MPP_SINGLE.
+    integer(i4_kind)                          :: threading_flag !<Flag telling whether one or multiple
+                                                             !! ranks will read the file.  This defaults to MPP_SINGLE.
     type(domainUG),pointer                     :: io_domain      !<Pointer to the unstructured I/O domain.
     integer(i4_kind)                          :: io_domain_npes !<The total number of ranks in an I/O domain pelist.
     integer(i4_kind),dimension(:),allocatable :: pelist         !<A pelist.
     integer(i4_kind)                          :: p              !<Loop variable.
-    logical(l4_kind)                          :: compute_chksum !<Flag telling whether or not a check-sum of the read-in data is calculated.
+    logical(l4_kind)                          :: compute_chksum !<Flag telling whether or not a check-sum
+                                                                !! of the read-in data is calculated.
     integer(i8_kind)                         :: chk            !<Calculated check-sum for the read in data.
 
    !Start the mpp timer.
@@ -942,15 +956,18 @@ subroutine mpp_io_unstructured_read_r4_3D(funit, &
     integer(i4_kind),intent(in),optional              :: tindex    !<Time level index for a NetCDF file.
     integer(i4_kind),dimension(:),intent(in),optional :: start     !<Corner indices for a NetCDF file.
     integer(i4_kind),dimension(:),intent(in),optional :: nread     !<Edge lengths for a NetCDF file.
-    integer(i4_kind),intent(in),optional              :: threading !<Flag telling whether one or multiple ranks will read the file.
+    integer(i4_kind),intent(in),optional              :: threading !<Flag telling whether one or multiple
+                                                                   !! ranks will read the file.
 
    !Local variables
-    integer(i4_kind)                          :: threading_flag !<Flag telling whether one or multiple ranks will read the file.  This defaults to MPP_SINGLE.
+    integer(i4_kind)                          :: threading_flag !<Flag telling whether one or multiple
+                                                             !! ranks will read the file.  This defaults to MPP_SINGLE.
     type(domainUG),pointer                     :: io_domain      !<Pointer to the unstructured I/O domain.
     integer(i4_kind)                          :: io_domain_npes !<The total number of ranks in an I/O domain pelist.
     integer(i4_kind),dimension(:),allocatable :: pelist         !<A pelist.
     integer(i4_kind)                          :: p              !<Loop variable.
-    logical(l4_kind)                          :: compute_chksum !<Flag telling whether or not a check-sum of the read-in data is calculated.
+    logical(l4_kind)                          :: compute_chksum !<Flag telling whether or not a check-sum
+                                                                !! of the read-in data is calculated.
     integer(i8_kind)                         :: chk            !<Calculated check-sum for the read in data.
 
    !Start the mpp timer.
@@ -1100,7 +1117,4 @@ subroutine mpp_io_unstructured_read_r4_3D(funit, &
 
     return
 end subroutine mpp_io_unstructured_read_r4_3D
-
-!------------------------------------------------------------------------------
-
-!----------
+!> @}

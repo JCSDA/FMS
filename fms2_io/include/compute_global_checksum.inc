@@ -17,7 +17,10 @@
 !* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
 !***********************************************************************
 !> @file
-!> @ingroup fms_netcdf_domain_io_mod
+!> @brief Routines for calculating variable checksums across pes for the @ref compute_global_checksum interface
+
+!> @addtogroup fms_netcdf_domain_io_mod
+!> @{
 
 !> @briefs Calculates a variable's checksum across all ranks in the current pelist.
 !! @return A hex string containing the checksum.
@@ -66,7 +69,8 @@ function compute_global_checksum_2d(fileobj, variable_name, variable_data, is_de
   io_domain => mpp_get_io_domain(fileobj%domain)
   call domain_offsets(size(variable_data, xdim), size(variable_data, ydim), fileobj%domain, &
                       xpos, ypos, isd, isc, xc_size, jsd, jsc, &
-                      yc_size, buffer_includes_halos, extra_x, extra_y)
+                      yc_size, buffer_includes_halos, extra_x, extra_y, &
+                      msg="file:"//trim(fileobj%path)//" and variable:"//trim(variable_name))
   c(:) = 1
   if (buffer_includes_halos) then
     !Adjust if the input buffer has room for halos.
@@ -127,7 +131,8 @@ function compute_global_checksum_2d(fileobj, variable_name, variable_data, is_de
       endif
       deallocate(buf_r8_kind)
     class default
-      call error("Compute_global_checksum: unsupported type.")
+      call error("unsupported variable type: compute_global_checksum_2d: file: "//trim(fileobj%path)//" variable:"// &
+               & trim(variable_name))
   end select
   chksum = ""
   write(chksum, "(Z16)") chksum_val
@@ -181,7 +186,8 @@ function compute_global_checksum_3d(fileobj, variable_name, variable_data, is_de
   io_domain => mpp_get_io_domain(fileobj%domain)
   call domain_offsets(size(variable_data, xdim), size(variable_data, ydim), fileobj%domain, &
                       xpos, ypos, isd, isc, xc_size, jsd, jsc, &
-                      yc_size, buffer_includes_halos, extra_x, extra_y)
+                      yc_size, buffer_includes_halos, extra_x, extra_y, &
+                      msg="file:"//trim(fileobj%path)//" and variable:"//trim(variable_name))
   c(:) = 1
   if (buffer_includes_halos) then
     !Adjust if the input buffer has room for halos.
@@ -241,7 +247,8 @@ function compute_global_checksum_3d(fileobj, variable_name, variable_data, is_de
       endif
       deallocate(buf_r8_kind)
     class default
-      call error("Compute_global_checksum: unsupported type.")
+      call error("unsupported variable type: compute_global_checksum_3d: file: "//trim(fileobj%path)//" variable:"// &
+               & trim(variable_name))
   end select
   chksum = ""
   write(chksum, "(Z16)") chksum_val
@@ -295,7 +302,8 @@ function compute_global_checksum_4d(fileobj, variable_name, variable_data, is_de
   io_domain => mpp_get_io_domain(fileobj%domain)
   call domain_offsets(size(variable_data, xdim), size(variable_data, ydim), fileobj%domain, &
                       xpos, ypos, isd, isc, xc_size, jsd, jsc, &
-                      yc_size, buffer_includes_halos, extra_x, extra_y)
+                      yc_size, buffer_includes_halos, extra_x, extra_y, &
+                      msg="file:"//trim(fileobj%path)//" and variable:"//trim(variable_name))
   c(:) = 1
   if (buffer_includes_halos) then
     !Adjust if the input buffer has room for halos.
@@ -356,8 +364,10 @@ function compute_global_checksum_4d(fileobj, variable_name, variable_data, is_de
       endif
       deallocate(buf_r8_kind)
     class default
-      call error("Compute_global_checksum: unsupported type.")
+      call error("unsupported variable type: compute_global_checksum_4d: file: "//trim(fileobj%path)//" variable:"// &
+               & trim(variable_name))
   end select
   chksum = ""
   write(chksum, "(Z16)") chksum_val
 end function compute_global_checksum_4d
+!> @}

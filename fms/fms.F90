@@ -39,9 +39,6 @@
 !!     the @ref mpp module. These are routines for getting processor
 !!     numbers, commonly used I/O unit numbers, error handling, and timing sections of code.
 
-!> @file
-!> @brief File for @ref fms_mod
-
 !> @addtogroup fms_mod
 !> @{
 module fms_mod
@@ -164,7 +161,9 @@ use fms_io_mod, only : fms_io_init, fms_io_exit, field_size, &
 use fms2_io_mod, only: fms2_io_init
 use memutils_mod, only: print_memuse_stats, memutils_init
 use grid2_mod, only: grid_init, grid_end
+use fms_string_utils_mod, only: fms_c2f_string, fms_cstring2cpointer, string
 
+use, intrinsic :: iso_c_binding
 
 implicit none
 private
@@ -208,6 +207,7 @@ public :: MPP_CLOCK_SYNC, MPP_CLOCK_DETAILED
 public :: CLOCK_COMPONENT, CLOCK_SUBCOMPONENT, &
           CLOCK_MODULE_DRIVER, CLOCK_MODULE,   &
           CLOCK_ROUTINE, CLOCK_LOOP, CLOCK_INFRA
+public :: fms_c2f_string, fms_cstring2cpointer
 !public from the old fms_io but not exists here
 public :: string
 
@@ -292,13 +292,6 @@ integer, public :: clock_flag_default
 
 !> @}
 
-!> Converts a number to a string
-!> @ingroup fms_mod
-interface string
-   module procedure string_from_integer
-   module procedure string_from_real
-end interface
-
 !> @addtogroup fms_mod
 !> @{
 contains
@@ -329,8 +322,9 @@ subroutine fms_init (localcomm, alt_input_nml_path)
 
  integer, intent(in), optional :: localcomm
  character(len=*), intent(in), optional :: alt_input_nml_path
- integer :: unit, ierr, io
+ integer :: ierr, io
  integer :: logunitnum
+ integer :: stdout_unit !< Unit number for the stdout file
 
     if (module_is_initialized) return    ! return silently if already called
     module_is_initialized = .true.
@@ -361,19 +355,8 @@ subroutine fms_init (localcomm, alt_input_nml_path)
 
     call nml_error_init()  ! first initialize namelist iostat error codes
 
-#ifdef INTERNAL_FILE_NML
-      read (input_nml_file, fms_nml, iostat=io)
-      ierr = check_nml_error(io,'fms_nml')
-#else
-    if (file_exist('input.nml')) then
-       unit = open_namelist_file ( )
-       ierr=1; do while (ierr /= 0)
-          read  (unit, nml=fms_nml, iostat=io, end=10)
-          ierr = check_nml_error(io,'fms_nml')  ! also initializes nml error codes
-       enddo
- 10    call mpp_close (unit)
-    endif
-#endif
+    read (input_nml_file, fms_nml, iostat=io)
+    ierr = check_nml_error(io,'fms_nml')
 
 !---- define mpp stack sizes if non-zero -----
 
@@ -432,9 +415,9 @@ subroutine fms_init (localcomm, alt_input_nml_path)
 
     call write_version_number("FMS_MOD", version)
     if (mpp_pe() == mpp_root_pe()) then
-      unit = stdlog()
-      write (unit, nml=fms_nml)
-      write (unit,*) 'nml_error_codes=', nml_error_codes(1:num_nml_error_codes)
+      stdout_unit = stdlog()
+      write (stdout_unit, nml=fms_nml)
+      write (stdout_unit,*) 'nml_error_codes=', nml_error_codes(1:num_nml_error_codes)
     endif
 
     call memutils_init( print_memory_usage )
@@ -468,7 +451,7 @@ end subroutine fms_end
 !#######################################################################
 
  !> @brief Print notes, warnings and error messages; terminates program for warning
- !!     and error messages. Usage of @ref mpp_error is preferable. (use error levels NOTE,WARNING,FATAL, see example below)
+ !! and error messages. Usage of @ref mpp_error is preferable. (use error levels NOTE,WARNING,FATAL, see example below)
  !! @details Print notes, warnings and error messages; and terminates the program for
  !!     error messages. This routine is a wrapper around mpp_error, and is provided
  !!     for backward compatibility. This module also publishes mpp_error,
@@ -550,17 +533,10 @@ end subroutine fms_end
   !!       routine check_nml_error will return zero and the while loop will exit.
   !!       This code segment should be used to read namelist files.
   !!       @code{.F90}
-  !!         integer :: unit, ierr, io
+  !!         integer :: ierr, io
   !!
-  !!         if ( file_exist('input.nml') ) then
-  !!             unit = open_namelist_file ( )
-  !!             ierr=1
-  !!             do while (ierr > 0)
-  !!               read  (unit, nml=moist_processes_nml, iostat=io)
-  !!               ierr = check_nml_error(io,'moist_processes_nml')
-  !!             enddo
-  !!             call close_file (unit)
-  !!         endif
+  !!         read (input_nml_file, fms_nml, iostat=io)
+  !!         ierr = check_nml_error(io,'fms_nml')
   !!       @endcode
   !! @throws FATAL, Unknown error while reading namelist ...., (IOSTAT = ####)
   !! There was an error reading the namelist specified. Carefully examine all namelist and variables
@@ -587,7 +563,8 @@ end subroutine fms_end
 
     ! Everything else is a FATAL
     IF ( (IOSTAT == nml_errors%badType1 .OR. IOSTAT == nml_errors%badType2) .OR. IOSTAT == nml_errors%missingVar ) THEN
-       WRITE (err_str,*) 'Unknown namelist, or mistyped namelist variable in namelist ',TRIM(NML_NAME),', (IOSTAT = ',IOSTAT,')'
+       WRITE (err_str,*) 'Unknown namelist, or mistyped namelist variable in namelist ',TRIM(NML_NAME),', &
+             &  (IOSTAT = ',IOSTAT,')'
        CALL error_mesg ('check_nml_error in fms_mod', err_str, FATAL)
        CALL mpp_sync()
     ELSE
@@ -787,32 +764,6 @@ integer :: i
   endif
 
 end function monotonic_array
-
-!! Functions from the old fms_io
-  !> @brief Converts an integer to a string
-  !!
-  !> This has been updated from the fms_io function.
-  function string_from_integer(i) result (res)
-    integer, intent(in) :: i !< Integer to be converted to a string
-    character(:),allocatable :: res !< String converted frominteger
-    character(range(i)+2) :: tmp !< Temp string that is set to correct size
-    write(tmp,'(i0)') i
-    res = trim(tmp)
-   return
-
-  end function string_from_integer
-
-  !#######################################################################
-  !> @brief Converts a real to a string
-  function string_from_real(a)
-    real, intent(in) :: a
-    character(len=32) :: string_from_real
-
-    write(string_from_real,*) a
-
-    return
-
-  end function string_from_real
 
 !#######################################################################
 !> @brief Prints to the log file (or a specified unit) the version id string and

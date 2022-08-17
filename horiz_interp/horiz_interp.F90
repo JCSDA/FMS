@@ -35,9 +35,6 @@
 !! missing input data. An optional output mask field may be used in conjunction with
 !! the input mask to show where output data exists.
 
-!> @file
-!> @brief File for @ref horiz_interp_mod
-
 module horiz_interp_mod
 
 !-----------------------------------------------------------------------
@@ -966,8 +963,10 @@ contains
 !-----------------------------------------------------------------------
       real, intent(in),  dimension(:,:) :: data_in !< Global input data stored from west to east
                                         !! (1st dimension), south to north (2nd dimension)
-      real, intent(in)                  :: wb !< Longitude (radians) that correspond to western-most                                              !! boundary of grid box j=1 in array data_in
-      real, intent(in)                  :: sb !< Latitude (radians) that correspond to western-most                                              !! boundary of grid box j=1 in array data_in
+      real, intent(in)                  :: wb !< Longitude (radians) that correspond to western-most
+                                              !! boundary of grid box j=1 in array data_in
+      real, intent(in)                  :: sb !< Latitude (radians) that correspond to western-most
+                                              !! boundary of grid box j=1 in array data_in
       real, intent(in)                  :: dx !< Grid spacing (in radians) for the longitude axis
                                               !! (first dimension) for the input data
       real, intent(in)                  :: dy !< Grid spacing (in radians) for the latitude axis

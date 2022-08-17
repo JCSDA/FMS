@@ -16,7 +16,6 @@
 !* You should have received a copy of the GNU Lesser General Public
 !* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
 !***********************************************************************
-!FDOC_TAG_GFDL fdoc.pl generated xml skeleton
 
 #include "fms_switches.h"
 #define _FLATTEN(A) reshape((A), (/size((A))/) )
@@ -58,9 +57,6 @@
 !! on a per PE domain basis. There is no support for locally nested or unstrucured
 !! meshes. Meshes need not be smooth and continuous across PE domains, however.
 
-!> @file
-!> @brief File for @ref drifters_mod
-
 !> @addtogroup drifters_mod
 !> @{
 module drifters_mod
@@ -93,7 +89,7 @@ module drifters_mod
                                 drifters_io_set_position_names, drifters_io_set_position_units, &
                                 drifters_io_set_field_names, drifters_io_set_field_units, drifters_io_write
 
-  use drifters_comm_mod,  only: drifters_comm_type, drifters_comm_new, drifters_comm_del, drifters_comm_set_pe_neighbors, &
+  use drifters_comm_mod,  only: drifters_comm_type,drifters_comm_new,drifters_comm_del,drifters_comm_set_pe_neighbors,&
                                 drifters_comm_set_domain, drifters_comm_gather, drifters_comm_update
 
   use cloud_interpolator_mod, only: cld_ntrp_linear_cell_interp, cld_ntrp_locate_cell, cld_ntrp_get_cell_values
@@ -108,7 +104,6 @@ module drifters_mod
   integer, parameter, private :: MAX_STR_LEN = 128
 ! Include variable "version" to be written to log file.
 #include<file_version.h>
-  real :: DRFT_EMPTY_ARRAY(0)
   !> @}
 
   !> @brief Holds all data needed for drifters communication, io, and input.

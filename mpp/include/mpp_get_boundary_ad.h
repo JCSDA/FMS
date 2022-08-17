@@ -18,9 +18,10 @@
 !* You should have received a copy of the GNU Lesser General Public
 !* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
 !***********************************************************************
+!> @addtogroup mpp_domains_mod
+!> @{
 
-! this routine is used to retrieve scalar boundary data for symmetric domain.
-
+!> This routine is used to retrieve scalar boundary data for symmetric domain.
 subroutine MPP_GET_BOUNDARY_AD_2D_(field, domain, ebuffer, sbuffer, wbuffer, nbuffer, flags, &
                                 position, complete, tile_count)
   type(domain2D),       intent(in)   :: domain
@@ -29,16 +30,11 @@ subroutine MPP_GET_BOUNDARY_AD_2D_(field, domain, ebuffer, sbuffer, wbuffer, nbu
   integer,      intent(in), optional :: flags, position, tile_count
   logical,      intent(in), optional :: complete
 
-  MPP_TYPE_                             :: field3D(size(field,1),size(field,2),1)
-  MPP_TYPE_, allocatable, dimension(:,:) :: ebuffer2D, sbuffer2D, wbuffer2D, nbuffer2D
-  integer                               :: xcount, ycount
-
-
   integer                  :: ntile
   logical                  :: need_ebuffer, need_sbuffer, need_wbuffer, need_nbuffer
   integer(i8_kind),dimension(MAX_DOMAIN_FIELDS, MAX_TILES),  save :: f_addrs=-9999
   integer(i8_kind),dimension(4,MAX_DOMAIN_FIELDS, MAX_TILES),save :: b_addrs=-9999
-  integer, save    :: bsize(4)=0, isize=0, jsize=0, ksize=0, pos, list=0, l_size=0, upflags
+  integer, save    :: bsize(4)=0, isize=0, jsize=0, ksize=0, pos, list=0, l_size=0
   integer          :: buffer_size(4)
   integer          :: max_ntile, tile, update_position, ishift, jshift
   logical          :: do_update, is_complete, set_mismatch
@@ -179,7 +175,7 @@ subroutine MPP_GET_BOUNDARY_AD_3D_(field, domain, ebuffer, sbuffer, wbuffer, nbu
   logical                  :: need_ebuffer, need_sbuffer, need_wbuffer, need_nbuffer
   integer(i8_kind),dimension(MAX_DOMAIN_FIELDS, MAX_TILES),  save :: f_addrs=-9999
   integer(i8_kind),dimension(4,MAX_DOMAIN_FIELDS, MAX_TILES),save :: b_addrs=-9999
-  integer, save    :: bsize(4)=0, isize=0, jsize=0, ksize=0, pos, list=0, l_size=0, upflags
+  integer, save    :: bsize(4)=0, isize=0, jsize=0, ksize=0, pos, list=0, l_size=0
   integer          :: buffer_size(4)
   integer          :: max_ntile, tile, update_position, ishift, jshift
   logical          :: do_update, is_complete, set_mismatch
@@ -308,7 +304,7 @@ end subroutine MPP_GET_BOUNDARY_AD_3D_
 
 
 !####################################################################
-! vector update
+!> vector update version of @ref mpp_get_boundary_ad_2d
 subroutine MPP_GET_BOUNDARY_AD_2D_V_(fieldx, fieldy, domain, ebufferx, sbufferx, wbufferx, nbufferx, &
                                   ebuffery, sbuffery, wbuffery, nbuffery, flags, gridtype, &
                                   complete, tile_count)
@@ -748,3 +744,4 @@ subroutine MPP_GET_BOUNDARY_AD_3D_V_(fieldx, fieldy, domain, ebufferx, sbufferx,
   end if
 
 end subroutine MPP_GET_BOUNDARY_AD_3D_V_
+!> @}

@@ -24,15 +24,13 @@
 !! Currently only gradient on cubic grid is implemented. Also a public interface
 !! is provided to calculate grid information needed to calculate gradient.
 
-!> @file
-!> @brief File for @ref gradient_mod
-
 !> @addtogroup gradient_mod
 !> @{
 module gradient_mod
 
 use mpp_mod,       only : mpp_error, FATAL
 use constants_mod, only : RADIUS
+use platform_mod
 
 implicit none
 private
@@ -65,11 +63,11 @@ subroutine gradient_cubic(pin, dx, dy, area, edge_w, edge_e, edge_s, edge_n,    
                           en_n, en_e, vlon, vlat, grad_x, grad_y, on_west_edge, &
                           on_east_edge, on_south_edge, on_north_edge)
 
-  real,    dimension(:,:  ), intent(in ) :: pin, dx, dy, area
-  real,    dimension(:    ), intent(in ) :: edge_w, edge_e, edge_s, edge_n
-  real,    dimension(:,:,:), intent(in ) :: en_n, en_e
-  real,    dimension(:,:,:), intent(in ) :: vlon, vlat
-  real,    dimension(:,:  ), intent(out) :: grad_x, grad_y
+  real(r8_kind),    dimension(:,:  ), intent(in ) :: pin, dx, dy, area
+  real(r8_kind),    dimension(:    ), intent(in ) :: edge_w, edge_e, edge_s, edge_n
+  real(r8_kind),    dimension(:,:,:), intent(in ) :: en_n, en_e
+  real(r8_kind),    dimension(:,:,:), intent(in ) :: vlon, vlat
+  real(r8_kind),    dimension(:,:  ), intent(out) :: grad_x, grad_y
   logical,                   intent(in ) :: on_west_edge, on_east_edge, on_south_edge, on_north_edge
   integer :: nx, ny
 
@@ -77,10 +75,14 @@ subroutine gradient_cubic(pin, dx, dy, area, edge_w, edge_e, edge_s, edge_n,    
   nx = size(grad_x,1)
   ny = size(grad_x,2)
 
-  if(size(pin,1) .NE. nx+2 .OR. size(pin,2) .NE. ny+2)call mpp_error(FATAL, "gradient_mod:size of pin should be (nx+2, ny+2)")
-  if(size(dx,1) .NE. nx .OR. size(dx,2) .NE. ny+1 ) call mpp_error(FATAL, "gradient_mod: size of dx should be (nx,ny+1)")
-  if(size(dy,1) .NE. nx+1 .OR. size(dy,2) .NE. ny ) call mpp_error(FATAL, "gradient_mod: size of dy should be (nx+1,ny)")
-  if(size(area,1) .NE. nx .OR. size(area,2) .NE. ny ) call mpp_error(FATAL, "gradient_mod: size of area should be (nx,ny)")
+  if(size(pin,1) .NE. nx+2 .OR. size(pin,2) .NE. ny+2)call mpp_error(FATAL, &
+     &  "gradient_mod:size of pin should be (nx+2, ny+2)")
+  if(size(dx,1) .NE. nx .OR. size(dx,2) .NE. ny+1 ) call mpp_error(FATAL, &
+     &  "gradient_mod: size of dx should be (nx,ny+1)")
+  if(size(dy,1) .NE. nx+1 .OR. size(dy,2) .NE. ny ) call mpp_error(FATAL, &
+     &  "gradient_mod: size of dy should be (nx+1,ny)")
+  if(size(area,1) .NE. nx .OR. size(area,2) .NE. ny ) call mpp_error(FATAL, &
+     &  "gradient_mod: size of area should be (nx,ny)")
   if(size(vlon,1) .NE. 3 .OR. size(vlon,2) .NE. nx .OR. size(vlon,3) .NE. ny) &
           call mpp_error(FATAL, "gradient_mod: size of vlon should be (3,nx,ny)")
   if(size(vlat,1) .NE. 3 .OR. size(vlat,2) .NE. nx .OR. size(vlat,3) .NE. ny) &
@@ -104,11 +106,11 @@ end subroutine gradient_cubic
 
 subroutine calc_cubic_grid_info(xt, yt, xc, yc, dx, dy, area, edge_w, edge_e, edge_s, edge_n, &
                            en_n, en_e, vlon, vlat, on_west_edge, on_east_edge, on_south_edge, on_north_edge )
-  real,    dimension(:,:  ), intent(in ) :: xt, yt, xc, yc
-  real,    dimension(:,:  ), intent(out) :: dx, dy, area
-  real,    dimension(:    ), intent(out) :: edge_w, edge_e, edge_s, edge_n
-  real,    dimension(:,:,:), intent(out) :: en_n, en_e
-  real,    dimension(:,:,:), intent(out) :: vlon, vlat
+  real(r8_kind),    dimension(:,:  ), intent(in ) :: xt, yt, xc, yc
+  real(r8_kind),    dimension(:,:  ), intent(out) :: dx, dy, area
+  real(r8_kind),    dimension(:    ), intent(out) :: edge_w, edge_e, edge_s, edge_n
+  real(r8_kind),    dimension(:,:,:), intent(out) :: en_n, en_e
+  real(r8_kind),    dimension(:,:,:), intent(out) :: vlon, vlat
   logical,                   intent(in ) :: on_west_edge, on_east_edge, on_south_edge, on_north_edge
   integer :: nx, ny, nxp, nyp
 
@@ -118,13 +120,20 @@ subroutine calc_cubic_grid_info(xt, yt, xc, yc, dx, dy, area, edge_w, edge_e, ed
   nxp = nx+1
   nyp = ny+1
 
-  if(size(xt,1) .NE. nx+2 .OR. size(xt,2) .NE. ny+2 ) call mpp_error(FATAL, "gradient_mod: size of xt should be (nx+2,ny+2)")
-  if(size(yt,1) .NE. nx+2 .OR. size(yt,2) .NE. ny+2 ) call mpp_error(FATAL, "gradient_mod: size of yt should be (nx+2,ny+2)")
-  if(size(xc,1) .NE. nxp .OR. size(xc,2) .NE. nyp ) call mpp_error(FATAL, "gradient_mod: size of xc should be (nx+1,ny+1)")
-  if(size(yc,1) .NE. nxp .OR. size(yc,2) .NE. nyp ) call mpp_error(FATAL, "gradient_mod: size of yc should be (nx+1,ny+1)")
-  if(size(dx,1) .NE. nx .OR. size(dx,2) .NE. nyp ) call mpp_error(FATAL, "gradient_mod: size of dx should be (nx,ny+1)")
-  if(size(dy,1) .NE. nxp .OR. size(dy,2) .NE. ny ) call mpp_error(FATAL, "gradient_mod: size of dy should be (nx+1,ny)")
-  if(size(area,1) .NE. nx .OR. size(area,2) .NE. ny ) call mpp_error(FATAL, "gradient_mod: size of area should be (nx,ny)")
+  if(size(xt,1) .NE. nx+2 .OR. size(xt,2) .NE. ny+2 ) call mpp_error(FATAL, &
+     &  "gradient_mod: size of xt should be (nx+2,ny+2)")
+  if(size(yt,1) .NE. nx+2 .OR. size(yt,2) .NE. ny+2 ) call mpp_error(FATAL, &
+     &  "gradient_mod: size of yt should be (nx+2,ny+2)")
+  if(size(xc,1) .NE. nxp .OR. size(xc,2) .NE. nyp ) call mpp_error(FATAL, &
+     &  "gradient_mod: size of xc should be (nx+1,ny+1)")
+  if(size(yc,1) .NE. nxp .OR. size(yc,2) .NE. nyp ) call mpp_error(FATAL, &
+     &  "gradient_mod: size of yc should be (nx+1,ny+1)")
+  if(size(dx,1) .NE. nx .OR. size(dx,2) .NE. nyp ) call mpp_error(FATAL, &
+     &  "gradient_mod: size of dx should be (nx,ny+1)")
+  if(size(dy,1) .NE. nxp .OR. size(dy,2) .NE. ny ) call mpp_error(FATAL, &
+     &  "gradient_mod: size of dy should be (nx+1,ny)")
+  if(size(area,1) .NE. nx .OR. size(area,2) .NE. ny ) call mpp_error(FATAL, &
+     &  "gradient_mod: size of area should be (nx,ny)")
   if(size(vlon,1) .NE. 3 .OR. size(vlon,2) .NE. nx .OR. size(vlon,3) .NE. ny) &
           call mpp_error(FATAL, "gradient_mod: size of vlon should be (3,nx,ny)")
   if(size(vlat,1) .NE. 3 .OR. size(vlat,2) .NE. nx .OR. size(vlat,3) .NE. ny) &

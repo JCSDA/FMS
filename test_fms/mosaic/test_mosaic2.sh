@@ -25,8 +25,14 @@
 # Ed Hartnett 11/29/19
 
 # Set common test settings.
-. ../test_common.sh
+. ../test-lib.sh
 
 # Copy files for test.
-#cp $top_srcdir/test_fms/mosaic/input_nml input_nml
-run_test test_mosaic 2 skip
+touch input.nml
+rm -rf INPUT
+mkdir INPUT
+test_expect_success "test mosaic" '
+  mpirun -n 2 ./test_mosaic
+'
+rm -rf INPUT
+test_done

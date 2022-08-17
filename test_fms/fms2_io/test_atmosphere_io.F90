@@ -25,7 +25,7 @@ use mpp_domains_mod
 use mpp_mod
 use setup
 use platform_mod
-
+use fms_mod, only : check_nml_error
 
 type(Params) :: test_params
 type(domain2d) :: domain
@@ -83,6 +83,13 @@ integer, dimension(:), allocatable :: dim_sizes
 character(len=256) :: att
 character(len=6), dimension(4) :: names
 character(len=8) :: timestamp
+logical :: ignore_checksum = .false.
+logical :: bad_checksum = .false.
+
+integer :: io    !< Error code when reading namelist
+integer :: ierr  !< Error code when reading namelist
+
+namelist /test_atmosphere_io_nml/ bad_checksum, ignore_checksum
 
 !Initialize.
 call init(test_params, ntiles)
@@ -92,6 +99,9 @@ call mpi_barrier(mpi_comm_world, err)
 call mpi_check(err)
 call random_seed()
 call fms2_io_init()
+
+read(input_nml_file, nml=test_atmosphere_io_nml, iostat=io)
+ierr = check_nml_error(io, 'test_atmosphere_io_nml')
 
 if (test_params%debug) then
   if (mpp_pe() .eq. 0) then
@@ -116,18 +126,6 @@ call mpp_get_compute_domain(io_domain, ybegin=jsc_north, yend=jec_north, ysize=n
 call open_check(open_file(fileobj, "atmosphere_io.nc", "overwrite", &
                           domain, nc_format="64bit", is_restart=.true.))
 call open_check(open_virtual_file(fileobjv, domain, "atm.nc"))
-
-!Add some global attributes to the restart file.
-call register_global_attribute(fileobj, "globalatt1", real(7., kind=r8_kind))
-call register_global_attribute(fileobj, "globalatt2", real(4., kind=r4_kind))
-call register_global_attribute(fileobj, "globalatt3", int(3, kind=i4_kind))
-call register_global_attribute(fileobj, "globalatt4", int(2, kind=i8_kind))
-call register_global_attribute(fileobj, "globalatt5", "some text", str_len=9)
-call register_global_attribute(fileobjv, "globalatt1", real(7., kind=r8_kind))
-call register_global_attribute(fileobjv, "globalatt2", real(4., kind=r4_kind))
-call register_global_attribute(fileobjv, "globalatt3", int(3, kind=i4_kind))
-call register_global_attribute(fileobjv, "globalatt4", int(2, kind=i8_kind))
-call register_global_attribute(fileobjv, "globalatt5", "some text", str_len=9)
 
 !Add dimensions and corresponding variables to the file.
 !Longitude (domain "x" dimension with center position).
@@ -358,6 +356,12 @@ var8_chksum = mpp_chksum(var8, pelist=(/mpp_pe()/))
 var10_chksum = mpp_chksum(var10, pelist=(/mpp_pe()/))
 !var11_chksum = mpp_chksum(var11(isc-isd+1:isc-isd+1+nx, jsc-jsd+1:jsc-jsd+1+ny, :), pelist=(/mpp_pe()/))
 
+!replace var6 checksum with an incorrect checksum
+if (bad_checksum) then
+  var6_chksum = 101010101
+  call register_variable_attribute(fileobj , "var6", "checksum", "101010101", str_len = 9)
+  call register_variable_attribute(fileobjv, "var6", "checksum", "101010101", str_len = 9)
+endif
 !Close the file.
 call close_file(fileobj)
 call mpi_barrier(mpi_comm_world, err)
@@ -486,7 +490,7 @@ call register_restart_field(fileobj, "var11", var11)
 deallocate(dim_sizes)
 
 !Read in the restart data.
-call read_restart(fileobj, unlim_dim_level=nt)
+call read_restart(fileobj, unlim_dim_level=nt, ignore_checksum = ignore_checksum )
 
 
 chksum = mpp_chksum(var5, pelist=(/mpp_pe()/))
@@ -498,7 +502,11 @@ endif
 
 chksum = mpp_chksum(var6, pelist=(/mpp_pe()/))
 if (chksum .ne. var6_chksum) then
-  call mpp_error(fatal, "checksum for var 6 does not match.")
+  if (ignore_checksum) then
+    call mpp_error(warning, "checksum for var 6 does not match.")
+  else
+    call mpp_error(fatal, "checksum for var 6 does not match.")
+  endif
 else
   call mpp_error(warning, "checksum for var 6 does match.")
 endif
@@ -525,7 +533,7 @@ var5p = 0.
 var6p = 0.
 var7p = 0.
 var8p = 0.
-call read_new_restart(fileobjv, timestamp=timestamp)
+call read_new_restart(fileobjv, timestamp=timestamp, ignore_checksum=ignore_checksum)
 
 !Close the file.
 call close_file(fileobj)

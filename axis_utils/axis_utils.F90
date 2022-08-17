@@ -19,10 +19,10 @@
 !> @defgroup axis_utils_mod axis_utils_mod
 !> @ingroup axis_utils
 !> @brief A set of utilities for manipulating axes and extracting axis attributes,
+!! A more recent version of this module using the updated fms2_io is available, @ref axis_utils2
+!! but this module should be used if still using @ref mpp_io
+!!
 !> @author M.J. Harrison
-
-!> @file
-!> @brief File for @ref axis_utils_mod
 
 !> @addtogroup axis_utils_mod
 !> @{
@@ -83,7 +83,7 @@ contains
     character(len=8) , dimension(4) :: z_units
     character(len=3) , dimension(6) :: t_units
     character(len=32) :: name
-    integer :: i,j
+    integer :: i
 
     lon_names = (/'lon','x  '/)
     lat_names = (/'lat','y  '/)
@@ -415,8 +415,8 @@ contains
     do i=2,ia
        if (array(i) < array(i-1)) then
           unit = stdout()
-          write (unit,*) '=> Error: "frac_index" array must be monotonically increasing when searching for nearest value to ',&
-                              value
+          write (unit,*) &
+            '=> Error: "frac_index" array must be monotonically increasing when searching for nearest value to ', value
           write (unit,*) '          array(i) < array(i-1) for i=',i
           write (unit,*) '          array(i) for i=1..ia follows:'
           do ii=1,ia
@@ -533,7 +533,7 @@ contains
     real, dimension(:),    intent(in) :: grid1, data1, grid2
     real, dimension(:), intent(inout) :: data2
 
-    integer :: n1, n2, i, n, ext
+    integer :: n1, n2, i, n
     real :: w
 
     n1 = size(grid1(:))
@@ -690,8 +690,7 @@ contains
     real, dimension(:,:),    intent(in) :: grid1, data1, grid2
     real, dimension(:,:), intent(inout) :: data2
 
-    integer :: n1, n2, i, n, k2, ks, ke
-    real :: w
+    integer :: n1, n2, n, k2, ks, ke
 
     n1 = size(grid1,1)
     n2 = size(grid2,1)
@@ -717,8 +716,8 @@ contains
     character(len=*), optional, intent(in) :: method
     real,             optional, intent(in) :: yp1, yp2
 
-    integer           :: n1, n2, m1, m2, k2, i, n, m
-    real              :: w, y1, y2
+    integer           :: n1, n2, m1, m2, k2, n, m
+    real              :: y1, y2
     character(len=32) :: interp_method
     integer           :: ks, ke
     n1 = size(grid1,1)

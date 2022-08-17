@@ -20,14 +20,10 @@
 !> @ingroup column_diagnostics
 !! @brief Module to locate and mark desired diagnostic columns
 
-!> @file
-!> @brief File for @ref column_diagnostics_mod
-
 !> @addtogroup column_diagnostics_mod
 !> @{
 module column_diagnostics_mod
 
-use mpp_io_mod,             only:  mpp_io_init
 use fms_mod,                only:  fms_init, mpp_pe, mpp_root_pe, &
                                    mpp_npes, check_nml_error, &
                                    error_mesg, FATAL, NOTE, WARNING, &
@@ -35,7 +31,7 @@ use fms_mod,                only:  fms_init, mpp_pe, mpp_root_pe, &
 use time_manager_mod,       only:  time_manager_init, month_name, &
                                    get_date, time_type
 use constants_mod,          only:  constants_init, PI, RADIAN
-use mpp_mod,                only:  input_nml_file, get_unit
+use mpp_mod,                only:  input_nml_file
 
 !-------------------------------------------------------------------
 
@@ -143,7 +139,6 @@ subroutine column_diagnostics_init
 !---------------------------------------------------------------------
 !    verify that all modules used by this module have been initialized.
 !----------------------------------------------------------------------
-      call mpp_io_init
       call fms_init
       call time_manager_init
       call constants_init
@@ -431,8 +426,7 @@ integer, dimension(:), intent(out)   :: diag_units            !< unit number for
               else
                  write( filename,'(a,i4.4)' )trim(filename)//'.', mpp_pe()-mpp_root_pe()
               endif
-              diag_units(nn) = get_unit()
-              open(diag_units(nn), file=trim(filename), action='WRITE', position='rewind', iostat=io)
+              open(newunit=diag_units(nn), file=trim(filename), action='WRITE', position='rewind', iostat=io)
               if(io/=0) call error_mesg ('column_diagnostics_mod', 'Error in opening file '//trim(filename), FATAL)
             endif  ! (open_file)
           endif
@@ -494,7 +488,7 @@ integer, dimension(:), intent(in)  :: diag_j    !< j coordinate of current diagn
       integer           :: hour   !< integers defining the current time
       integer           :: minute !< integers defining the current time
       integer           :: second !< integers defining the current time
-      character(len=8)  :: mon    !< character string for the current month
+      character(len=9)  :: mon    !< character string for the current month
       character(len=64) :: header !< title for the output
 
 !--------------------------------------------------------------------

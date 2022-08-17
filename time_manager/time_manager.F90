@@ -21,31 +21,15 @@
 !> @link http://www.gfdl.noaa.gov/fms-cgi-bin/cvsweb.cgi/FMS/
 !> @brief A software package that provides a set of simple interfaces for
 !!   modelers to perform computations related to time and dates.
-!> The changes between the lima revision and this revision are more
-!! extensive that all those between antwerp and lima.
-!! A brief description of these changes follows.
 !!
-!! <LI> Added option to set the smallest time increment to something less than one second.
-!!    This is controlled by calling the pubic subroutine set_ticks_per_second. </LI>
+!! Optional error flag can be used in calling arguments of public routines.
+!! This allows the using routine to terminate the program. It is likely that more
+!! diagnostic information is available from the user than from time_manager alone.
+!! If the error flag is present then it is the responsibility of the using
+!! routine to test it and add additional information to the error message.
 !!
-!! <LI>Gregorian calendar fixed.</LI>
-!!
-!! <LI>Optional error flag added to calling arguments of public routines.
-!!    This allows the using routine to terminate the program. It is likely that more
-!!    diagnostic information is available from the user than from time_manager alone.
-!!    If the error flag is present then it is the responsibility of the using
-!!    routine to test it and add additional information to the error message.</LI>
-!!
-!! <LI>Removed the restriction that time increments be positive in routines that increment or decrement
-!!    time and date. The option to prohibit negative increments can be turned on via optional argument.</LI>
-!!
-!! <LI>subroutine set_date_c modified to handle strings that include only hours or only hours and minutes.
-!!    This complies with CF convensions.</LI>
-!!
-!! <LI>Made calendar specific routines private.
-!!    They are not used, and should not be used, by any using code.</LI>
-!!
-!! <LI>Error messages made more informative.</LI>
+!! Calendar specific routines are private.
+!! They are not used, and should not be used, by any using code.
 !!
 !! The module defines a type that can be used to represent discrete
 !! times (accurate to one second) and to map these times into dates
@@ -74,20 +58,12 @@
 !! The number of ticks per second is set via pubic subroutine set_ticks_per_second.
 !! For example, ticks_per_second = 1000  will set the tick to one millisecond.
 
-!! <DATA NAME="time_type" TYPE="derived type">
-!!    Derived-type data variable used to store time and date quantities. It
-!!    contains three PRIVATE variables: days, seconds and ticks.
-!! </DATA>
-
-!> @file
-!> @brief File for @ref time_manager_mod
-
 !> @addtogroup time_manager_mod
 !> @{
 module time_manager_mod
 
 
-use platform_mod, only: r8_kind
+use platform_mod, only: r4_kind, r8_kind
 use constants_mod, only: rseconds_per_day=>seconds_per_day
 use fms_mod, only: error_mesg, FATAL, WARNING, write_version_number, stdout
 
@@ -154,10 +130,7 @@ integer, parameter :: max_type = 4
 ! Define number of days per month
 integer, private :: days_per_month(12) = (/31,28,31,30,31,30,31,31,30,31,30,31/)
 integer, parameter :: seconds_per_day = rseconds_per_day  ! This should automatically cast real to integer
-integer, parameter :: days_in_400_year_period = 146097    ! Used only for gregorian
-integer, dimension(days_in_400_year_period) :: coded_date ! Used only for gregorian
-integer, dimension(400,12,31) :: date_to_day              ! Used only for gregorian
-integer, parameter :: invalid_date=-1                     ! Used only for gregorian
+integer, parameter :: days_in_400_year_period = 146097    !< Used only for gregorian
 integer,parameter :: do_floor = 0
 integer,parameter :: do_nearest = 1
 
@@ -171,7 +144,6 @@ type :: time_type
    integer:: seconds
    integer:: days
    integer:: ticks
-   integer:: dummy !< added as a workaround bug on IRIX64 (AP)
 end type time_type
 
 !> Operator override interface for use with @ref time_type
@@ -332,7 +304,8 @@ contains
  seconds_new = modulo(seconds_new,seconds_per_day)
 
  if ( seconds_new < 0 .or. ticks_new < 0) then
-   call error_mesg('function set_time_i','Bad result for time. Contact those responsible for maintaining time_manager',FATAL)
+   call error_mesg('function set_time_i','Bad result for time. Contact those responsible for maintaining time_manager'&
+                  & ,FATAL)
  endif
 
  if(days_new < 0) then
@@ -605,7 +578,8 @@ end subroutine get_time
    return
  endif
 
- increment_time_private = set_time_private(Time_in%seconds+seconds, Time_in%days+days, Time_in%ticks+ticks, Time_out, err_msg)
+ increment_time_private = set_time_private(Time_in%seconds+seconds, Time_in%days+days, Time_in%ticks+ticks, &
+                                          &  Time_out, err_msg)
 
  end function increment_time_private
 
@@ -999,9 +973,9 @@ if(.not.module_is_initialized) call time_manager_init
 ! ticks could be up to ticks_per_second-1
 
 tick_prod = dble(time%ticks) * dble(n)
-num_sec   = tick_prod/dble(ticks_per_second)
+num_sec   = int(tick_prod/dble(ticks_per_second))
 sec_prod  = dble(time%seconds) * dble(n) + num_sec
-ticks     = tick_prod - num_sec * ticks_per_second
+ticks     = int(tick_prod - num_sec * ticks_per_second)
 
 ! If sec_prod is large compared to precision of double precision, things
 ! can go bad.  Need to warn and abort on this.
@@ -1013,8 +987,8 @@ if(sec_prod /= 0.0) then
       'Insufficient precision to handle scalar product in time_scalar_mult; contact developer',FATAL)
 end if
 
-days = sec_prod / dble(seconds_per_day)
-seconds = sec_prod - dble(days) * dble(seconds_per_day)
+days = int(sec_prod / dble(seconds_per_day))
+seconds = int(sec_prod - dble(days) * dble(seconds_per_day))
 
 time_scalar_mult = set_time(seconds, time%days * n + days, ticks)
 
@@ -1091,7 +1065,7 @@ d1 = time1%days * dble(seconds_per_day) + dble(time1%seconds) + time1%ticks/dble
 d2 = time2%days * dble(seconds_per_day) + dble(time2%seconds) + time2%ticks/dble(ticks_per_second)
 
 ! Get integer quotient of this, check carefully to avoid round-off problems.
-time_divide = d1 / d2
+time_divide = int(d1 / d2)
 
 ! Verify time_divide*time2 is <= time1 and (time_divide + 1)*time2 is > time1
 if(time_divide * time2 > time1 .or. (time_divide + 1) * time2 <= time1) &
@@ -1197,8 +1171,8 @@ type(time_type), intent(in) :: time
 
 if(.not.module_is_initialized) call time_manager_init
 
-time_type_to_real = dble(time%days) * 86400.d0 + dble(time%seconds) + &
-     dble(time%ticks)/dble(ticks_per_second)
+time_type_to_real = real(dble(time%days) * 86400.d0 + dble(time%seconds) + &
+     dble(time%ticks)/dble(ticks_per_second), kind=r8_kind)
 
 end function time_type_to_real
 
@@ -1206,7 +1180,7 @@ end function time_type_to_real
 !! @return A filled time type variable, and an error message if an
 !!         error occurs.
 function real_to_time_type(x,err_msg) result(t)
-  real,intent(in) :: x !< Number of seconds.
+  class(*),intent(in) :: x !< Number of seconds.
   character(len=*),intent(out),optional :: err_msg !< Error message.
   type(time_type) :: t
   integer :: days
@@ -1217,9 +1191,29 @@ function real_to_time_type(x,err_msg) result(t)
   real :: tps
   real :: a
   tps = real(ticks_per_second)
-  a = x/spd
+
+  select type (x)
+  type is (real(kind=r4_kind))
+    a = x/spd
+  type is (real(kind=r8_kind))
+    a = real(x)/spd
+  class default
+    call error_mesg('time_manager_mod::real_to_time_type',&
+         & 'x is not one of the supported types of real(kind=4) or real(kind=8)', FATAL)
+  end select
+
   days = safe_rtoi(a,do_floor)
-  a = x - real(days)*spd
+
+  select type (x)
+  type is (real(kind=r4_kind))
+    a = x - real(days)*spd
+  type is (real(kind=r8_kind))
+    a = real(x) - real(days)*spd
+  class default
+    call error_mesg('time_manager_mod::real_to_time_type',&
+         & 'x is not one of the supported types of real(kind=4) or real(kind=8)', FATAL)
+  end select
+
   seconds = safe_rtoi(a,do_floor)
   a = (a - real(seconds))*tps
   ticks = safe_rtoi(a,do_nearest)
@@ -1297,9 +1291,9 @@ dticks_per_second = dble(ticks_per_second)
 d = time%days*dseconds_per_day*dticks_per_second + dble(time%seconds)*dticks_per_second + dble(time%ticks)
 div = d/dble(n)
 
-days = div/(dseconds_per_day*dticks_per_second)
-seconds = div/dticks_per_second - days*dseconds_per_day
-ticks = div - (days*dseconds_per_day + dble(seconds))*dticks_per_second
+days = int(div/(dseconds_per_day*dticks_per_second))
+seconds = int(div/dticks_per_second - days*dseconds_per_day)
+ticks = int(div - (days*dseconds_per_day + dble(seconds))*dticks_per_second)
 time_scalar_divide = set_time(seconds, days, ticks)
 
 ! Need to make sure that roundoff isn't killing this
@@ -1457,21 +1451,16 @@ end function repeat_alarm
 !     if(err_msg /= '') call error_mesg('my_routine','additional info: '//trim(err_msg),FATAL)
 !   </OUT>
 
-!> @brief Sets calendar_type. The arrays coded_date and days_this_month used for the Gregorian calendar
-!! are assigned in this subroutine.  The arrays and this component of the subroutine has been kept in order to be used by the original/old
-!! get_date_gregorian and set_date_gregorian which are now called get_date_gregorian_old and set_date_gregorian_old.  The
-!! get/set_date_gregorian_old subroutines have been kept in order to test the new get/set_date_gregorian. The new get/set_date_gregorian
-!! do not utilize the coded_date and days_this_month arrays.  As done in the get/set_date_gregorian_old, in the new routines,
-!! negative years and the proleptic Gregorian calendar are not used; and the discontinuity of days in October 1582
-!! (when the Gregorian calendar was adopted by select groups in Europe) is not taken into account.
+!> @brief Sets calendar_type.
+!! For the Gregorian calendar, negative years and the proleptic calendar are not used;
+!! and the discontinuity of days in October 1582 (when the Gregorian calendar was adopted by select groups in Europe)
+!! is also not taken into account.
 subroutine set_calendar_type(type, err_msg)
 
 ! Selects calendar for default mapping from time to date.
 
 integer, intent(in) :: type
 character(len=*), intent(out), optional :: err_msg
-integer :: iday, days_this_month, year, month, day
-logical :: leap
 character(len=256) :: err_msg_local
 
 if(.not.module_is_initialized) call time_manager_init()
@@ -1491,23 +1480,6 @@ if(seconds_per_day /= 86400 .and. type /= NO_CALENDAR ) then
 endif
 
 calendar_type = type
-
-if(type == GREGORIAN) then
-  date_to_day = invalid_date
-  iday = 0
-  do year=1,400
-    leap = leap_year_gregorian_int(year)
-    do month=1,12
-      days_this_month = days_per_month(month)
-      if(leap .and. month ==2) days_this_month = 29
-      do day=1,days_this_month
-        date_to_day(year,month,day) = iday
-        iday = iday+1
-        coded_date(iday) = day + 32*(month + 16*year)
-      enddo ! do day
-    enddo ! do month
-  enddo ! do year
-endif
 
 end subroutine set_calendar_type
 ! </SUBROUTINE>
@@ -1616,9 +1588,7 @@ end function get_ticks_per_second
 !   </OUT>
 
  !> @brief Gets the date for different calendar types.
- !! The added optional argument old_method allows user to choose either the new or old version
- !! of get_date_gregorian.  The variable old_method is only useful if the calendar type is Gregorian
- subroutine get_date(time, year, month, day, hour, minute, second, tick, err_msg, old_method)
+ subroutine get_date(time, year, month, day, hour, minute, second, tick, err_msg)
 
 ! Given a time, computes the corresponding date given the selected calendar
 
@@ -1626,32 +1596,21 @@ end function get_ticks_per_second
  integer, intent(out)           :: second, minute, hour, day, month, year
  integer, intent(out), optional :: tick
  character(len=*), intent(out), optional :: err_msg
- logical, intent(in), optional  :: old_method !< option to choose betw the new and old ver of get_date_gregorian subroutine.
-                                              !! When .true., call get_date_gregorian_old to retrieve the date
-                                              !! from the array coded_date.  When .false., call get_date_gregorian to
-                                              !! compute the date on the fly.
  character(len=128) :: err_msg_local
  integer :: tick1
- logical :: old_method_local !< set as .false..  Takes on the value of old_method if old_method is present.
 
  if(.not.module_is_initialized) call time_manager_init
  if(present(err_msg)) err_msg = ''
 
  select case(calendar_type)
  case(THIRTY_DAY_MONTHS)
-   call get_date_thirty   (time, year, month, day, hour, minute, second, tick1)
+   call get_date_thirty(time, year, month, day, hour, minute, second, tick1)
  case(GREGORIAN)
-   old_method_local=.false.
-   if(present(old_method)) old_method_local=old_method
-   if(old_method_local) then
-     call get_date_gregorian_old(time, year, month, day, hour, minute, second, tick1)
-   else
-     call get_date_gregorian(time, year, month, day, hour, minute, second, tick1)
-   end if
+   call get_date_gregorian(time, year, month, day, hour, minute, second, tick1)
  case(JULIAN)
-   call get_date_julian_private   (time, year, month, day, hour, minute, second, tick1)
+   call get_date_julian_private(time, year, month, day, hour, minute, second, tick1)
  case(NOLEAP)
-   call get_date_no_leap_private  (time, year, month, day, hour, minute, second, tick1)
+   call get_date_no_leap_private(time, year, month, day, hour, minute, second, tick1)
  case(NO_CALENDAR)
    err_msg_local = 'Cannot produce a date when the calendar type is NO_CALENDAR'
    if(error_handler('subroutine get_date', err_msg_local, err_msg)) return
@@ -1753,39 +1712,6 @@ end function get_ticks_per_second
  end subroutine get_date_gregorian
 !------------------------------------------------------------------------
 
-!> @brief Gets the date on a Gregorian calendar.  This is the original/old subroutine.
-!! Looks up the year, month, day from the coded_date array
-!! This subroutine is kept in order to test the new get_date_gregorian
- subroutine get_date_gregorian_old(time, year, month, day, hour, minute, second, tick)
-
-! Computes date corresponding to time for gregorian calendar
-
- type(time_type), intent(in) :: time
- integer, intent(out) :: year, month, day, hour, minute, second
- integer, intent(out) :: tick
- integer :: iday, isec
-
- if(Time%seconds >= 86400) then ! This check appears to be unecessary.
-   call error_mesg('get_date','Time%seconds .ge. 86400 in subroutine get_date_gregorian_old',FATAL)
- endif
-
- iday = mod(Time%days+1,days_in_400_year_period)
- if(iday == 0) iday = days_in_400_year_period
-
- year = coded_date(iday)/512
- day = mod(coded_date(iday),32)
- month = coded_date(iday)/32 - 16*year
-
- year = year + 400*((Time%days)/days_in_400_year_period)
-
- hour = Time%seconds / 3600
- isec  = Time%seconds - 3600*hour
- minute = isec / 60
- second = isec - 60*minute
- tick = time%ticks
-
- end subroutine get_date_gregorian_old
-!------------------------------------------------------------------------
  function cut0(string)
  character(len=256) :: cut0
  character(len=*), intent(in) :: string
@@ -1992,9 +1918,7 @@ end function get_ticks_per_second
 !   <OUT NAME="set_date" TYPE="time_type"> A time interval.</OUT>
 
 !> @brief Sets days for different calendar types.
-!! The added optional argument old_method allows user to choose either the new or old version
-!! of set_date_gregorian.  The variable old_method is only useful if the calendar type is Gregorian
- function set_date_private(year, month, day, hour, minute, second, tick, Time_out, err_msg, old_method)
+ function set_date_private(year, month, day, hour, minute, second, tick, Time_out, err_msg)
 
 ! Given a date, computes the corresponding time given the selected
 ! date time mapping algorithm.  Note that it is possible to specify
@@ -2005,11 +1929,6 @@ end function get_ticks_per_second
  integer, intent(in) :: year, month, day, hour, minute, second, tick
  type(time_type) :: Time_out
  character(len=*), intent(out) :: err_msg
- logical, intent(in), optional ::old_method !< option to choose betw the new and old ver of get_date_gregorian subroutine.
-                                            !! When .true., call set_date_gregorian_old to retrieve the time%days
-                                            !! from the array date_to_day.  When .false., call set_date_gregorian to
-                                            !! compute the time%days on the fly.
- logical :: old_method_local !< set as .false..  Takes on the value of old_method if old_method is present.
 
  if(.not.module_is_initialized) call time_manager_init
 
@@ -2017,19 +1936,13 @@ end function get_ticks_per_second
 
  select case(calendar_type)
  case(THIRTY_DAY_MONTHS)
-   set_date_private = set_date_thirty   (year, month, day, hour, minute, second, tick, Time_out, err_msg)
+   set_date_private = set_date_thirty         (year, month, day, hour, minute, second, tick, Time_out, err_msg)
  case(GREGORIAN)
-   old_method_local = .false.
-   if( present(old_method) ) old_method_local=old_method
-   if( old_method_local ) then
-     set_date_private = set_date_gregorian_old(year, month, day, hour, minute, second, tick, Time_out, err_msg)
-   else
-     set_date_private = set_date_gregorian(year, month, day, hour, minute, second, tick, Time_out, err_msg)
-   end if
+   set_date_private = set_date_gregorian      (year, month, day, hour, minute, second, tick, Time_out, err_msg)
  case(JULIAN)
-   set_date_private = set_date_julian_private   (year, month, day, hour, minute, second, tick, Time_out, err_msg)
+   set_date_private = set_date_julian_private (year, month, day, hour, minute, second, tick, Time_out, err_msg)
  case(NOLEAP)
-   set_date_private = set_date_no_leap_private  (year, month, day, hour, minute, second, tick, Time_out, err_msg)
+   set_date_private = set_date_no_leap_private(year, month, day, hour, minute, second, tick, Time_out, err_msg)
  case (NO_CALENDAR)
    err_msg = 'Cannot produce a date when calendar type is NO_CALENDAR'
    set_date_private = .false.
@@ -2044,20 +1957,13 @@ end function get_ticks_per_second
 !------------------------------------------------------------------------
 
  !> @brief Calls set_date_private to set days for different calendar types.
- !! The added optional argument old_method allows user to choose either the new or old version
- !! of set_date_gregorian. The variable old_method is only useful if the calendar type is Gregorian
- function set_date_i(year, month, day, hour, minute, second, tick, err_msg, old_method)
+ function set_date_i(year, month, day, hour, minute, second, tick, err_msg)
  type(time_type) :: set_date_i
  integer, intent(in) :: day, month, year
  integer, intent(in), optional :: second, minute, hour, tick
- logical, intent(in), optional :: old_method !< option to choose betw the new and old ver of get_date_gregorian subroutine.
-                                             !! When .true., call set_date_gregorian_old to retrieve the time%days
-                                             !! from the array date_to_day.  When .false., call set_date_gregorian to
-                                             !! compute the time%days on the fly.
  character(len=*), intent(out), optional :: err_msg
  integer :: osecond, ominute, ohour, otick
  character(len=128) :: err_msg_local
- logical :: old_method_local !< set as .false..  Takes on the value of old_method if old_method is present.
 
  if(.not.module_is_initialized) call time_manager_init
  if(present(err_msg)) err_msg = ''
@@ -2068,9 +1974,7 @@ end function get_ticks_per_second
  ohour   = 0; if(present(hour))   ohour   = hour
  otick   = 0; if(present(tick))   otick   = tick
 
- old_method_local = .false.
- if( present(old_method) ) old_method_local=old_method
- if(.not.set_date_private(year, month, day, ohour, ominute, osecond, otick, set_date_i, err_msg_local, old_method=old_method_local)) then
+ if(.not.set_date_private(year, month, day, ohour, ominute, osecond, otick, set_date_i, err_msg_local)) then
    if(error_handler('function set_date_i', err_msg_local, err_msg)) return
  end if
 
@@ -2078,9 +1982,7 @@ end function get_ticks_per_second
 !------------------------------------------------------------------------
 
  !> @brief Calls set_date_private for different calendar types when given a string input.
- !! The added optional argument old_method allows user to choose either the new or old version
- !! of set_date_gregorian. The variable old_method is only useful if the calendar type is Gregorian
- function set_date_c(string, zero_year_warning, err_msg, allow_rounding, old_method)
+ function set_date_c(string, zero_year_warning, err_msg, allow_rounding)
 
  ! Examples of acceptable forms of string:
 
@@ -2106,13 +2008,8 @@ end function get_ticks_per_second
  logical,          intent(in),  optional :: zero_year_warning
  character(len=*), intent(out), optional :: err_msg
  logical,          intent(in),  optional :: allow_rounding
- logical,          intent(in),  optional :: old_method  !< option to choose betw the new and old ver of set_date_gregorian.
-                                                        !! When .true., call set_date_gregorian_old to retrieve the days
-                                                        !! from the array date_to_day.  When .false., call set_date_gregorian to
-                                                        !! compute the days on the fly.
  character(len=4) :: formt='(i )'
  logical :: correct_form, zero_year_warning_local, allow_rounding_local
- logical :: old_method_local !< set as .false..  Takes on the value of old_method if old_method is present.
  integer :: i1, i2, i3, i4, i5, i6, i7
  character(len=32) :: string_sifted_left
  integer :: year, month, day, hour, minute, second, tick
@@ -2199,9 +2096,7 @@ end function get_ticks_per_second
    endif
  endif
 
- old_method_local = .false.
- if( present(old_method) ) old_method_local = old_method
- if(.not.set_date_private(year, month, day, hour, minute, second, tick, set_date_c, err_msg_local,old_method=old_method_local)) then
+ if(.not.set_date_private(year, month, day, hour, minute, second, tick, set_date_c, err_msg_local)) then
    if(error_handler('function set_date_c', err_msg_local, err_msg)) return
  end if
 
@@ -2250,15 +2145,16 @@ end function get_ticks_per_second
  if(yearx.gt.0) then
    ncenturies = int( yearx/100 )
    nlpyrs     = int( (yearx-ncenturies*100)/4 )
-   dayx       = ncenturies*36524 + (yearx-ncenturies*100)*365 + nlpyrs ! 36524 days in 100 years, year 100 not leap year
+   dayx       = ncenturies*36524 + (yearx-ncenturies*100)*365 + nlpyrs ! 36524 days in 100 years, year 100 not
+                                                                       !! leap year
    if(ncenturies.eq.4) dayx = dayx + 1 ! year 400 is a leap year
  end if
 
  select case( month )
  case(1)  ; dayx = dayx
- case(2)  ; dayx = dayx + 31
- case(3)  ; dayx = dayx + 59 + l
- case(4)  ; dayx = dayx + 90 + l
+ case(2)  ; dayx = dayx +  31
+ case(3)  ; dayx = dayx +  59 + l
+ case(4)  ; dayx = dayx +  90 + l
  case(5)  ; dayx = dayx + 120 + l
  case(6)  ; dayx = dayx + 151 + l
  case(7)  ; dayx = dayx + 181 + l
@@ -2294,43 +2190,6 @@ end function get_ticks_per_second
 
 !------------------------------------------------------------------------
 
-!> @brief Sets Time_out%days on a Gregorian calendar.  This is the original/old subroutine.
-!! Look up the total number of days between 1/1/0001 to the current month/day/year in the array date_to_day
-!! This function is kept in order to test the new set_date_gregorian
- function set_date_gregorian_old(year, month, day, hour, minute, second, tick, Time_out, err_msg)
- logical :: set_date_gregorian_old
-
-! Computes time corresponding to date for gregorian calendar.
-
- integer,          intent(in)  :: year, month, day, hour, minute, second, tick
- type(time_type),  intent(out) :: Time_out
- character(len=*), intent(out) :: err_msg
- integer :: yr1, day1
-
- if( .not.valid_increments(year,month,day,hour,minute,second,tick,err_msg) ) then
-   set_date_gregorian_old = .false.
-   return
- endif
-
- Time_out%seconds = second + 60*(minute + 60*hour)
-
- yr1 = mod(year,400)
- if(yr1 == 0) yr1 = 400
- day1 = date_to_day(yr1,month,day)
-  if(day1 == invalid_date) then
-   err_msg = 'Invalid_date. Date='//convert_integer_date_to_char(year,month,day,hour,minute,second)
-   set_date_gregorian_old = .false.
-   return
- endif
-
- Time_out%days = day1 + days_in_400_year_period*((year-1)/400)
- Time_out%ticks = tick
- err_msg = ''
- set_date_gregorian_old = .true.
-
- end function set_date_gregorian_old
-
-!------------------------------------------------------------------------
  function set_date_julian_private(year, month, day, hour, minute, second, tick, Time_out, err_msg)
  logical :: set_date_julian_private
 
@@ -2599,7 +2458,8 @@ end function get_ticks_per_second
  allow_neg_inc_local=.true.; if(present(allow_neg_inc)) allow_neg_inc_local=allow_neg_inc
 
  if(.not.allow_neg_inc_local) then
-   if(oyears < 0 .or. omonths < 0 .or. odays < 0 .or. ohours < 0 .or. ominutes < 0 .or. oseconds < 0 .or. oticks < 0) then
+   if(oyears < 0 .or. omonths < 0 .or. odays < 0 .or. ohours < 0 .or. ominutes < 0 .or. oseconds < 0 .or. &
+    & oticks < 0) then
      write(err_msg_local,10) oyears, omonths, odays, ohours, ominutes, oseconds, oticks
      if(error_handler('function increment_time', err_msg_local, err_msg)) return
    endif
@@ -2697,13 +2557,16 @@ end function get_ticks_per_second
  ! Convert this back into a time.
    select case(calendar_type)
    case(THIRTY_DAY_MONTHS)
-     increment_date_private = set_date_thirty   (cyear, cmonth, cday, chour, cminute, csecond, ctick, Time_out, err_msg)
+     increment_date_private = set_date_thirty (cyear, cmonth, cday, chour, cminute, csecond, ctick, Time_out, err_msg)
    case(NOLEAP)
-     increment_date_private = set_date_no_leap_private  (cyear, cmonth, cday, chour, cminute, csecond, ctick, Time_out, err_msg)
+     increment_date_private = set_date_no_leap_private  (cyear, cmonth, cday, chour, cminute, csecond, ctick, &
+                                                        &  Time_out, err_msg)
    case(JULIAN)
-     increment_date_private = set_date_julian_private   (cyear, cmonth, cday, chour, cminute, csecond, ctick, Time_out, err_msg)
+     increment_date_private = set_date_julian_private   (cyear, cmonth, cday, chour, cminute, csecond, ctick, &
+                                                        &  Time_out, err_msg)
    case(GREGORIAN)
-     increment_date_private = set_date_gregorian(cyear, cmonth, cday, chour, cminute, csecond, ctick, Time_out, err_msg)
+     increment_date_private = set_date_gregorian(cyear, cmonth, cday, chour, cminute, csecond, ctick, Time_out, &
+                                                &  err_msg)
    end select
  endif ! if(mode_2)
 
@@ -2782,7 +2645,8 @@ end function get_ticks_per_second
  allow_neg_inc_local=.true.; if(present(allow_neg_inc)) allow_neg_inc_local=allow_neg_inc
 
  if(.not.allow_neg_inc_local) then
-   if(oyears < 0 .or. omonths < 0 .or. odays < 0 .or. ohours < 0 .or. ominutes < 0 .or. oseconds < 0 .or. oticks < 0) then
+   if(oyears < 0 .or. omonths < 0 .or. odays < 0 .or. ohours < 0 .or. ominutes < 0 .or. oseconds < 0 .or. &
+    & oticks < 0) then
      write(err_msg_local,10) oyears, omonths, odays, ohours, ominutes, oseconds, oticks
      if(error_handler('function decrement_date', err_msg_local, err_msg)) return
    endif
@@ -3065,11 +2929,8 @@ end function length_of_year_thirty
 function length_of_year_gregorian()
 
 type(time_type) :: length_of_year_gregorian
-integer :: days, seconds
 
-days = days_in_400_year_period / 400
-seconds = 86400*(days_in_400_year_period/400. - days)
-length_of_year_gregorian = set_time(seconds, days)
+length_of_year_gregorian = set_time(20952, 365) !20952 = 86500 * (days_in_400_yrs/400. - (days_in_400_yrs/400))
 
 end function length_of_year_gregorian
 
@@ -3079,7 +2940,7 @@ function length_of_year_julian()
 
 type(time_type) :: length_of_year_julian
 
-length_of_year_julian = set_time((24 / 4) * 60 * 60, 365)
+length_of_year_julian = set_time(21600, 365) !21600 = (24/4) * 60 * 60
 
 end function length_of_year_julian
 
@@ -3115,7 +2976,7 @@ end
 ! START OF days_in_year BLOCK
 ! <FUNCTION NAME="days_in_year">
 
-!> @brief Retruns the number of days in the calendar year corresponding to the date represented by
+!> @brief Returns the number of days in the calendar year corresponding to the date represented by
 !! time for the default calendar.
 !> @returns The number of days in this year for the default calendar type.
 function days_in_year(Time)

@@ -86,9 +86,6 @@
 !!      type(domain1D), public :: NULL_DOMAIN1D
 !!      type(domain2D), public :: NULL_DOMAIN2D
 
-!> @file
-!> @brief File for @ref mpp_domains_mod
-
 !> @addtogroup mpp_domains_mod
 !> @{
 
@@ -202,6 +199,7 @@ module mpp_domains_mod
 
   !--- public interface from mpp_define_domains.inc
   public :: mpp_define_nest_domains, mpp_get_C2F_index, mpp_get_F2C_index
+  public :: mpp_shift_nest_domains
   public :: mpp_get_nest_coarse_domain, mpp_get_nest_fine_domain
   public :: mpp_is_nest_coarse, mpp_is_nest_fine
   public :: mpp_get_nest_pelist, mpp_get_nest_npes
@@ -294,19 +292,7 @@ module mpp_domains_mod
      logical :: is_global !< .true. if domain axis extent covers global domain
   end type domain_axis_spec
 
-  !> One dimensional domain used to manage shared data access between pes
-  !> @ingroup mpp_domains_mod
-  type :: domain1D
-     private
-     type(domain_axis_spec) :: compute, data, global, memory !> index limits for different domains
-     logical :: cyclic
-     type(domain1D), pointer :: list(:) =>NULL() !> list of each pe's domains
-     integer :: pe !<PE to which this domain is assigned
-     integer :: pos !< position of this PE within link list, i.e domain%list(pos)%pe = pe
-     integer :: goffset, loffset !< needed for global sum
-  end type domain1D
-
-  !> Private type used to specify index limits for a domain decomposition
+  !> A private type used to specify index limits for a domain decomposition
   !> @ingroup mpp_domains_mod
   type :: domain1D_spec
      private
@@ -345,7 +331,8 @@ module mpp_domains_mod
      integer,         pointer :: dir(:)          => NULL() !< direction ( value 1,2,3,4 = E,S,W,N)
      integer,         pointer :: rotation(:)     => NULL() !< rotation angle.
      integer,         pointer :: index(:)        => NULL() !< for refinement
-     logical,         pointer :: from_contact(:) => NULL() !< indicate if the overlap is computed from define_contact_overlap
+     logical,         pointer :: from_contact(:) => NULL() !< indicate if the overlap is computed from
+                                                           !! define_contact_overlap
   end type overlap_type
 
   !> Private type for overlap specifications
@@ -401,17 +388,24 @@ module mpp_domains_mod
      type(domain1D),     pointer :: y(:)          => NULL() !< y-direction domain decomposition
      type(domain2D_spec),pointer :: list(:)       => NULL() !< domain decomposition on pe list
      type(tile_type),    pointer :: tileList(:)   => NULL() !< store tile information
-     type(overlapSpec),  pointer :: check_C       => NULL() !< send and recv information for boundary consistency check of C-cell
-     type(overlapSpec),  pointer :: check_E       => NULL() !< send and recv information for boundary consistency check of E-cell
-     type(overlapSpec),  pointer :: check_N       => NULL() !< send and recv information for boundary consistency check of N-cell
-     type(overlapSpec),  pointer :: bound_C       => NULL() !< send information for getting boundary value for symmetry domain.
-     type(overlapSpec),  pointer :: bound_E       => NULL() !< send information for getting boundary value for symmetry domain.
-     type(overlapSpec),  pointer :: bound_N       => NULL() !< send information for getting boundary value for symmetry domain.
+     type(overlapSpec),  pointer :: check_C       => NULL() !< send and recv information for boundary
+                                                            !! consistency check of C-cell
+     type(overlapSpec),  pointer :: check_E       => NULL() !< send and recv information for boundary
+                                                            !! consistency check of E-cell
+     type(overlapSpec),  pointer :: check_N       => NULL() !< send and recv information for boundary
+                                                            !! consistency check of N-cell
+     type(overlapSpec),  pointer :: bound_C       => NULL() !< send information for getting boundary
+                                                            !! value for symmetry domain.
+     type(overlapSpec),  pointer :: bound_E       => NULL() !< send information for getting boundary
+                                                            !! value for symmetry domain.
+     type(overlapSpec),  pointer :: bound_N       => NULL() !< send information for getting boundary
+                                                            !! value for symmetry domain.
      type(overlapSpec),  pointer :: update_T      => NULL() !< send and recv information for halo update of T-cell.
      type(overlapSpec),  pointer :: update_E      => NULL() !< send and recv information for halo update of E-cell.
      type(overlapSpec),  pointer :: update_C      => NULL() !< send and recv information for halo update of C-cell.
      type(overlapSpec),  pointer :: update_N      => NULL() !< send and recv information for halo update of N-cell.
-     type(domain2d),     pointer :: io_domain     => NULL() !< domain for IO, will be set through calling mpp_set_io_domain ( this will be changed).
+     type(domain2d),     pointer :: io_domain     => NULL() !< domain for IO, will be set through calling
+                                                            !! mpp_set_io_domain ( this will be changed).
   END TYPE domain2D
 
   !> Type used to represent the contact between tiles.
@@ -458,6 +452,7 @@ module mpp_domains_mod
   type :: nest_domain_type
      character(len=NAME_LENGTH)     :: name
      integer                        :: num_level
+     integer,               pointer :: nest_level(:)    !< Added for moving nest functionality
      type(nest_level_type), pointer :: nest(:) => NULL()
      integer                        :: num_nest
      integer,               pointer :: tile_fine(:), tile_coarse(:)
@@ -628,6 +623,22 @@ module mpp_domains_mod
      integer            :: type_recv(MAX_REQUEST)
   end type mpp_group_update_type
 
+  !> One dimensional domain used to manage shared data access between pes
+  !> @ingroup mpp_domains_mod
+  type :: domain1D
+     private
+     type(domain_axis_spec) :: compute !< index limits for compute domain
+     type(domain_axis_spec) :: data    !< index limits for data domain
+     type(domain_axis_spec) :: global  !< index limits for global domain
+     type(domain_axis_spec) :: memory  !< index limits for memory domain
+     logical :: cyclic !< true if domain is cyclic
+     type(domain1D), pointer :: list(:) =>NULL() !< list of each pe's domains
+     integer :: pe !<PE to which this domain is assigned
+     integer :: pos !< position of this PE within link list, i.e domain%list(pos)%pe = pe
+     integer :: goffset !< needed for global sum
+     integer :: loffset !< needed for global sum
+  end type domain1D
+
 !#######################################################################
 
 !> @addtogroup mpp_domains_mod
@@ -664,15 +675,13 @@ module mpp_domains_mod
   integer, parameter :: MAX_ADDRS=512
   integer(i8_kind),dimension(MAX_ADDRS),save :: addrs_sorted=-9999 !< list of sorted local addresses
   integer,           dimension(-1:MAX_ADDRS),save :: addrs_idx=-9999 !< index of address associated with d_comm
-  integer,           dimension(MAX_ADDRS),save :: a_salvage=-9999 !< freed index list of addresses
   integer,                                save :: a_sort_len=0 !< length sorted memory list
   integer,                                save :: n_addrs=0   !< number of memory addresses used
 
-  integer(i8_kind), parameter :: ADDR2_BASE = int(Z'0000000000010000', kind=i8_kind)
+  integer(i8_kind), parameter :: ADDR2_BASE = 65536_i8_kind !< = 0x0000000000010000
   integer, parameter :: MAX_ADDRS2=128
   integer(i8_kind),dimension(MAX_ADDRS2),save :: addrs2_sorted=-9999 !< list of sorted local addresses
   integer,           dimension(-1:MAX_ADDRS2),save :: addrs2_idx=-9999 !< index of addr2 associated with d_comm
-  integer,           dimension(MAX_ADDRS2),save :: a2_salvage=-9999 !< freed indices of addr2
   integer,                                 save :: a2_sort_len=0   !< length sorted memory list
   integer,                                 save :: n_addrs2=0  !< number of memory addresses used
 
@@ -688,17 +697,17 @@ module mpp_domains_mod
   !     Not sure why static d_comm fails during deallocation of derived type members; allocatable works
   !     type(DomainCommunicator2D),dimension(MAX_FIELDS),save,target    :: d_comm !< domain communicators
   type(DomainCommunicator2D),dimension(:),allocatable,save,target :: d_comm  !< domain communicators
-  integer,                   dimension(-1:MAX_FIELDS),save           :: d_comm_idx=-9999 !< index of d_comm associated with sorted addresses
-  integer,                   dimension(MAX_FIELDS),save           :: dc_salvage=-9999 !< freed indices of d_comm
+  integer,                   dimension(-1:MAX_FIELDS),save           :: d_comm_idx=-9999 !< index of
+                                                                             !! d_comm associated with sorted addresses
   integer,                                         save           :: dc_sort_len=0 !< length sorted comm keys
 !! (=num active communicators)
   integer,                                         save           :: n_comm=0  !< number of communicators used
 
   !     integer(i8_kind), parameter :: GT_BASE=2**8
-  integer(i8_kind), parameter :: GT_BASE = int(Z'0000000000000100', kind=i8_kind)
+  integer(i8_kind), parameter :: GT_BASE = 256_i8_kind !0x0000000000000100
 
   !     integer(i8_kind), parameter :: KE_BASE=2**48
-  integer(i8_kind), parameter :: KE_BASE = int(Z'0001000000000000', kind=i8_kind)
+  integer(i8_kind), parameter :: KE_BASE = 281474976710656_i8_kind !0x0001000000000000
 
   integer(i8_kind) :: domain_cnt=0
 
@@ -902,6 +911,7 @@ module mpp_domains_mod
      module procedure mpp_copy_domain2D
   end interface mpp_copy_domain
   !> Deallocate given 1D or 2D domain
+  !> @param domain an allocated @ref domain1D or @ref domain2D
   !> @ingroup mpp_domains_mod
   interface mpp_deallocate_domain
      module procedure mpp_deallocate_domain1D
@@ -1293,7 +1303,10 @@ module mpp_domains_mod
      module procedure mpp_complete_do_update_i4_3d
   end interface
 
-
+  !> Constructor for the @ref mpp_group_update_type which is
+  !! then used with @ref mpp_start_group_update
+  !!
+  !> @param
   !> @ingroup mpp_domains_mod
   interface mpp_create_group_update
      module procedure mpp_create_group_update_r4_2d
@@ -1316,12 +1329,24 @@ module mpp_domains_mod
      module procedure mpp_do_group_update_r8
   end interface mpp_do_group_update
 
+  !> Starts non-blocking group update
+  !! Must be followed up with a call to @ref mpp_complete_group_update
+  !! @ref mpp_group_update_type can be created with @ref mpp_create_group_update
+  !!
+  !> @param[inout] type(mpp_group_update_type) group type created for group update
+  !> @param[inout] type(domain2D) domain to update
   !> @ingroup mpp_domains_mod
   interface mpp_start_group_update
      module procedure mpp_start_group_update_r4
      module procedure mpp_start_group_update_r8
   end interface mpp_start_group_update
 
+  !> Completes a pending non-blocking group update
+  !! Must follow a call to @ref mpp_start_group_update
+  !!
+  !> @param[inout] type(mpp_group_update_type) group
+  !> @param[inout] type(domain2D) domain
+  !> @param[in] d_type data type
   !> @ingroup mpp_domains_mod
   interface mpp_complete_group_update
      module procedure mpp_complete_group_update_r4
@@ -1345,7 +1370,7 @@ module mpp_domains_mod
   end interface mpp_reset_group_update_field
 
   !> Pass the data from coarse grid to fill the buffer to be ready to be interpolated
-  !! nto fine grid.
+  !! onto fine grid.
   !! <br>Example usage:
   !!
   !!                call mpp_update_nest_fine(field, nest_domain, wbuffer, ebuffer, sbuffer,
@@ -1437,6 +1462,8 @@ module mpp_domains_mod
      module procedure mpp_update_nest_coarse_i4_4d
   end interface
 
+  !> @brief Used by @ref mpp_update_nest_coarse to perform domain updates
+  !!
   !> @ingroup mpp_domains_mod
   interface mpp_do_update_nest_coarse
      module procedure mpp_do_update_nest_coarse_r8_3d
@@ -1464,7 +1491,13 @@ module mpp_domains_mod
     module procedure mpp_get_F2C_index_coarse
   end interface
 
-  !> Send domain to every pe
+  !> Broadcasts domain to every pe. Only useful outside the context of it's own pelist
+  !!
+  !> <br>Example usage:
+  !!                    call mpp_broadcast_domain(domain)
+  !!                    call mpp_broadcast_domain(domain_in, domain_out)
+  !!                    call mpp_broadcast_domain(domain, tile_coarse) ! nested domains
+  !!
   !> @ingroup mpp_domains_mod
   interface mpp_broadcast_domain
     module procedure mpp_broadcast_domain_1
@@ -1514,7 +1547,7 @@ module mpp_domains_mod
 #endif
      module procedure mpp_do_update_i4_3d
   end interface
-
+  !> Private interface to updates data domain of 3D field whose computational domains have been computed
   !> @ingroup mpp_domains_mod
   interface mpp_do_check
      module procedure mpp_do_check_r8_3d
@@ -1547,6 +1580,10 @@ module mpp_domains_mod
      module procedure mpp_pass_SG_to_UG_l4_3d
   end interface
 
+  !> Passes a data field from a structured grid to an unstructured grid
+  !! <br>Example usage:
+  !!
+  !!            call mpp_pass_SG_to_UG(SG_domain, field_SG, field_UG)
   !> @ingroup mpp_domains_mod
   interface mpp_pass_UG_to_SG
      module procedure mpp_pass_UG_to_SG_r8_2d
@@ -1559,10 +1596,11 @@ module mpp_domains_mod
      module procedure mpp_pass_UG_to_SG_l4_3d
   end interface
 
-
-!!$     module procedure mpp_do_update_ad_i4_3d
-!!$  end interface
-!
+  !> Passes a data field from a unstructured grid to an structured grid
+  !! <br>Example usage:
+  !!
+  !!            call mpp_pass_UG_to_SG(UG_domain, field_UG, field_SG)
+  !!
   !> @ingroup mpp_domains_mod
   interface mpp_do_update_ad
      module procedure mpp_do_update_ad_r8_3d
@@ -1570,9 +1608,9 @@ module mpp_domains_mod
      module procedure mpp_do_update_ad_r4_3d
      module procedure mpp_do_update_ad_r4_3dv
   end interface
-!
+
 !> Get the boundary data for symmetric domain when the data is at C, E, or N-cell center.<br>
-!! \e mpp_get_boundary is used to get the boundary data for symmetric domain
+!! @ref mpp_get_boundary is used to get the boundary data for symmetric domain
 !! when the data is at C, E, or N-cell center. For cubic grid, the data should always
 !! at C-cell center.
 !! <br>Example usage:
@@ -1819,6 +1857,7 @@ module mpp_domains_mod
      module procedure mpp_global_field2D_l4_5d_ad
   end interface
 
+!> Private helper interface used by @ref mpp_global_field
 !> @ingroup mpp_domains_mod
   interface mpp_do_global_field
      module procedure mpp_do_global_field2D_r8_3d
@@ -1850,6 +1889,7 @@ module mpp_domains_mod
      module procedure mpp_do_global_field2D_a2a_l4_3d
   end interface
 
+!> Same functionality as @ref mpp_global_field but for unstructured domains
 !> @ingroup mpp_domains_mod
   interface mpp_global_field_ug
      module procedure mpp_global_field2D_ug_r8_2d
@@ -1886,7 +1926,7 @@ module mpp_domains_mod
      module procedure mpp_do_global_field2D_l4_3d_ad
   end interface
 
-!> Global max/min of domain-decomposed arrays.<br>
+!> Global max of domain-decomposed arrays.<br>
 !! \e mpp_global_max is used to get the maximum value of a
 !! domain-decomposed array on each PE. \e MPP_TYPE_can be of type
 !! \e integer or \e real; of 4-byte or 8-byte kind; of rank
@@ -1922,6 +1962,22 @@ module mpp_domains_mod
      module procedure mpp_global_max_i4_5d
   end interface
 
+!> Global min of domain-decomposed arrays.<br>
+!! \e mpp_global_min is used to get the minimum value of a
+!! domain-decomposed array on each PE. \e MPP_TYPE_can be of type
+!! \e integer or \e real; of 4-byte or 8-byte kind; of rank
+!! up to 5. The dimension of \e locus must equal the rank of \e field.<br>
+!!<br>
+!! All PEs in a domain decomposition must call \e mpp_global_min,
+!! and each will have the result upon exit.
+!! The function \e mpp_global_max, with an identical syntax. is also available.
+!!
+!! @param domain 2D domain
+!! @param field field data dimensioned on either the compute or data domains of 'domain'
+!! @param locus If present, van be used to retrieve the location of the minimum
+!!
+!! <br>Example usage:
+!!              mpp_global_min( domain, field, locus )
 !> @ingroup mpp_domains_mod
   interface mpp_global_min
      module procedure mpp_global_min_r8_2d

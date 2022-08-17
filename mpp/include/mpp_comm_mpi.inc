@@ -19,28 +19,27 @@
 !* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
 !***********************************************************************
 !> @file
-!> @ingroup mpp
 !> @brief Routines to initialize and finalize @ref mpp_mod with mpi enabled.
+
+!> @addtogroup mpp_mod
+!> @{
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !                                                                             !
 !       ROUTINES TO INITIALIZE/FINALIZE MPP MODULE: mpp_init, mpp_exit        !
 !                                                                             !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !    subroutine mpp_init( flags, in, out, err, log )
-  !      integer, optional, intent(in) :: flags, in, out, err, log
-  !> @brief Initialize the @ref mpp_mod module
+  !> @brief Initialize the @ref mpp_mod module. Must be called before any usage.
   subroutine mpp_init( flags, localcomm, test_level, alt_input_nml_path )
-  integer, optional, intent(in) :: flags
-  integer, optional, intent(in) :: localcomm
-  integer, optional, intent(in) :: test_level
-  character(len=*), optional, intent(in) :: alt_input_nml_path
-  integer                       :: my_pe, num_pes, len, i, iunit
+  integer, optional, intent(in) :: flags !< Flags for debug output, can be MPP_VERBOSE or MPP_DEBUG
+  integer, optional, intent(in) :: localcomm !< Id of MPI communicator used to initialize
+  integer, optional, intent(in) :: test_level !< Used to exit initialization at certain stages
+                                              !! before completion for testing purposes
+  character(len=*), optional, intent(in) :: alt_input_nml_path !< Input path for namelist
+  integer                       :: i, iunit
   logical                       :: opened, existed
-  integer                       :: unit_begin, unit_end, unit_nml, io_status
+  integer                       :: io_status
   integer                       :: t_level
-  character(len=5) :: this_pe
-  type(mpp_type), pointer :: dtype
 
   if( module_is_initialized )return
 
@@ -120,23 +119,9 @@
   if (t_level == 4) return
 
   !--- read namelist
-#ifdef INTERNAL_FILE_NML
   read (input_nml_file, mpp_nml, iostat=io_status)
-#else
-  unit_begin = 103
-  unit_end   = 512
-  do unit_nml = unit_begin, unit_end
-     inquire( unit_nml,OPENED=opened )
-     if( .NOT.opened )exit
-  end do
-
-  open(unit_nml,file='input.nml', iostat=io_status)
-  read(unit_nml,mpp_nml,iostat=io_status)
-  close(unit_nml)
-#endif
-
   if (io_status > 0) then
-     call mpp_error(FATAL,'=>mpp_init: Error reading input.nml')
+     call mpp_error(FATAL,'=>mpp_init: Error reading mpp_nml')
   endif
   if (t_level == 5) return
 
@@ -148,18 +133,14 @@
   if(etc_unit_is_stderr) then
      etc_unit = stderr()
   else
-! 9 is reserved for etc_unit
-     etc_unit=9
-     inquire(unit=etc_unit,opened=opened)
-     if(opened) call mpp_error(FATAL,'Unit 9 is already in use (etc_unit) in mpp_comm_mpi')
      if (trim(etcfile) /= '/dev/null') then
         write( etcfile,'(a,i6.6)' )trim(etcfile)//'.', pe
      endif
      inquire(file=etcfile, exist=existed)
      if(existed) then
-        open( unit=etc_unit, file=trim(etcfile), status='REPLACE' )
+        open( newunit=etc_unit, file=trim(etcfile), status='REPLACE' )
      else
-        open( unit=etc_unit, file=trim(etcfile) )
+        open( newunit=etc_unit, file=trim(etcfile) )
      endif
   endif
 
@@ -178,39 +159,6 @@
   type_recv(:)    = 0
 
   if (t_level == 7) return
-
-  !if optional argument logunit=stdout, write messages to stdout instead.
-  !if specifying non-defaults, you must specify units not yet in use.
-  !      if( PRESENT(in) )then
-  !          inquire( unit=in, opened=opened )
-  !          if( opened )call mpp_error( FATAL, 'MPP_INIT: unable to open stdin.' )
-  !          in_unit=in
-  !      end if
-  !      if( PRESENT(out) )then
-  !          inquire( unit=out, opened=opened )
-  !          if( opened )call mpp_error( FATAL, 'MPP_INIT: unable to open stdout.' )
-  !          out_unit=out
-  !      end if
-  !      if( PRESENT(err) )then
-  !          inquire( unit=err, opened=opened )
-  !          if( opened )call mpp_error( FATAL, 'MPP_INIT: unable to open stderr.' )
-  !          err_unit=err
-  !      end if
-  !      log_unit=get_unit()
-  !      if( PRESENT(log) )then
-  !          inquire( unit=log, opened=opened )
-  !          if( opened .AND. log.NE.out_unit )call mpp_error( FATAL, 'MPP_INIT: unable to open stdlog.' )
-  !          log_unit=log
-  !      end if
-  !!log_unit can be written to only from root_pe, all others write to stdout
-  !      if( log_unit.NE.out_unit )then
-  !          inquire( unit=log_unit, opened=opened )
-  !          if( opened )call mpp_error( FATAL, 'MPP_INIT: specified unit for stdlog already in use.' )
-  !          if( pe.EQ.root_pe )open( unit=log_unit, file=trim(configfile), status='REPLACE' )
-  !          call mpp_sync()
-  !          if( pe.NE.root_pe )open( unit=log_unit, file=trim(configfile), status='OLD' )
-  !      end if
-
 
   !messages
   iunit = stdlog()  ! workaround for lf95.
@@ -235,13 +183,14 @@
 end subroutine mpp_init
 
 !#######################################################################
-  !> To be called at the end of a run
+!> Finalizes process termination. To be called at the end of a run.
+!! Certain mpi implementations(openmpi) will fail if this is not called before program termination
 subroutine mpp_exit()
-  integer :: i, j, k, n, nmax, istat, out_unit, log_unit
+  integer :: i, j, n, nmax, out_unit, log_unit
   real    :: t, tmin, tmax, tavg, tstd
   real    :: m, mmin, mmax, mavg, mstd, t_total
   logical :: opened
-  type(mpp_type), pointer :: dtype
+  type(mpp_type), pointer :: dtype, next_dtype
 
   if( .NOT.module_is_initialized )return
   call mpp_set_current_pelist()
@@ -261,7 +210,8 @@ subroutine mpp_exit()
         write( out_unit,'(/a,i6,a)' ) 'Tabulating mpp_clock statistics across ', npes, ' PEs...'
         if( ANY(clocks(1:clock_num)%detailed) ) &
              write( out_unit,'(a)' )'   ... see mpp_clock.out.#### for details on individual PEs.'
-        write( out_unit,'(/32x,a)' ) '      hits          tmin          tmax          tavg          tstd  tfrac grain pemin pemax'
+        write( out_unit,'(/32x,a)' ) &
+                & '      hits          tmin          tmax          tavg          tstd  tfrac grain pemin pemax'
      end if
      write( log_unit,'(/37x,a)' ) 'time'
 
@@ -322,19 +272,18 @@ subroutine mpp_exit()
 
   call FLUSH( out_unit )
 
-! close down etc_unit: 9
   inquire(unit=etc_unit, opened=opened)
   if (opened) then
    call FLUSH (etc_unit)
    close(etc_unit)
   endif
 
-  ! Clear derived data types (skipping list head, mpp_byte)
+  ! Clear derived data types
   dtype => datatypes%head
-  do while (.not. associated(dtype))
-      dtype => dtype%next
-      dtype%counter = 1         ! Force deallocation
+  do while (associated(dtype))
+      next_dtype => dtype%next
       call mpp_type_free(dtype)
+      dtype => next_dtype
   end do
 
   call mpp_set_current_pelist()
@@ -349,7 +298,7 @@ end subroutine mpp_exit
 !#######################################################################
   !> Set the mpp_stack variable to be at least n LONG words long
   subroutine mpp_set_stack_size(n)
-    integer, intent(in) :: n
+    integer, intent(in) :: n !< stack size to set
     character(len=8)    :: text
 
     if( n.GT.mpp_stack_size .AND. allocated(mpp_stack) )deallocate(mpp_stack)
@@ -369,11 +318,13 @@ end subroutine mpp_exit
 !                BASIC MESSAGE PASSING ROUTINE: mpp_transmit                  !
 !                                                                             !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !> Broadcasts a character string from the given pe to it's pelist
     subroutine mpp_broadcast_char(data, length, from_pe, pelist )
-      character(len=*), intent(inout) :: data(:)
-      integer, intent(in) :: length, from_pe
-      integer, intent(in), optional :: pelist(:)
-      integer :: n, i, from_rank, out_unit
+      character(len=*), intent(inout) :: data(:) !< Character string to send
+      integer, intent(in) :: length  !< length of given data to broadcast
+      integer, intent(in) :: from_pe !< pe to broadcast from
+      integer, intent(in), optional :: pelist(:) !< optional pelist to broadcast to
+      integer :: n, i, from_rank
       character    :: str1D(length*size(data(:)))
       pointer(lptr, str1D)
 
@@ -405,6 +356,9 @@ end subroutine mpp_exit
       if( debug .and. (current_clock.NE.0) )call increment_current_clock( EVENT_BROADCAST, length )
       return
     end subroutine mpp_broadcast_char
+
+! defines initialization value for mpp_type data
+#define MPP_TYPE_INIT_VALUE 0.
 
 #undef MPP_TRANSMIT_
 #define MPP_TRANSMIT_ mpp_transmit_real8
@@ -634,6 +588,8 @@ end subroutine mpp_exit
 #include <mpp_transmit_mpi.h>
 #endif
 
+#undef MPP_TYPE_INIT_VALUE
+#define MPP_TYPE_INIT_VALUE 0
 #undef MPP_TRANSMIT_
 #define MPP_TRANSMIT_ mpp_transmit_int8
 #undef MPP_TRANSMIT_SCALAR_
@@ -746,6 +702,8 @@ end subroutine mpp_exit
 #define MPI_TYPE_ MPI_INTEGER4
 #include <mpp_transmit_mpi.h>
 
+#undef MPP_TYPE_INIT_VALUE
+#define MPP_TYPE_INIT_VALUE .false.
 #undef MPP_TRANSMIT_
 #define MPP_TRANSMIT_ mpp_transmit_logical8
 #undef MPP_TRANSMIT_SCALAR_
@@ -857,6 +815,7 @@ end subroutine mpp_exit
 #undef MPI_TYPE_
 #define MPI_TYPE_ MPI_INTEGER4
 #include <mpp_transmit_mpi.h>
+#undef MPP_TYPE_INIT_VALUE
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !                                                                             !
@@ -1285,6 +1244,7 @@ end subroutine mpp_exit
 #define MPI_TYPE_ MPI_REAL8
 #include <mpp_alltoall_mpi.h>
 
+#ifdef OVERLOAD_C4
 #undef MPP_ALLTOALL_
 #undef MPP_ALLTOALLV_
 #undef MPP_ALLTOALLW_
@@ -1298,7 +1258,9 @@ end subroutine mpp_exit
 #define MPP_TYPE_BYTELEN_ 8
 #define MPI_TYPE_ MPI_COMPLEX8
 #include <mpp_alltoall_mpi.h>
+#endif
 
+#ifdef OVERLOAD_C8
 #undef MPP_ALLTOALL_
 #undef MPP_ALLTOALLV_
 #undef MPP_ALLTOALLW_
@@ -1312,6 +1274,7 @@ end subroutine mpp_exit
 #define MPP_TYPE_BYTELEN_ 16
 #define MPI_TYPE_ MPI_COMPLEX16
 #include <mpp_alltoall_mpi.h>
+#endif
 
 #undef MPP_ALLTOALL_
 #undef MPP_ALLTOALLV_
@@ -1416,7 +1379,8 @@ end subroutine mpp_exit
 #undef MPP_TYPE_
 #undef MPP_TYPE_CREATE_
 
-! NOTE: This should probably not take a pointer, but for now we do this.
+!> Deallocates memory for mpp_type objects
+!! @TODO This should probably not take a pointer, but for now we do this.
 subroutine mpp_type_free(dtype)
     type(mpp_type), pointer, intent(inout) :: dtype
 
@@ -1433,22 +1397,24 @@ subroutine mpp_type_free(dtype)
     dtype%counter = dtype%counter - 1
 
     if (dtype%counter < 1) then
-        ! De-register the datatype in MPI runtime
-        call MPI_Type_free(dtype%id, error)
-
         ! Remove from list
         dtype%prev => dtype%next
-
-        ! Remove from memory
-        if (allocated(dtype%sizes)) deallocate(dtype%sizes)
-        if (allocated(dtype%subsizes)) deallocate(dtype%subsizes)
-        if (allocated(dtype%starts)) deallocate(dtype%starts)
-        deallocate(dtype)
-
         datatypes%length = datatypes%length - 1
+
+        ! Free resources
+        deallocate(dtype%sizes)
+        deallocate(dtype%subsizes)
+        deallocate(dtype%starts)
+
+        ! User-defined datatype cleanup
+        if (dtype%id /= MPI_BYTE) then
+            call MPI_Type_free(dtype%id, error)
+            deallocate(dtype)
+        endif
     end if
 
     if (current_clock .NE. 0) &
         call increment_current_clock(EVENT_TYPE_FREE, MPP_TYPE_BYTELEN_)
 
 end subroutine mpp_type_free
+!> @}

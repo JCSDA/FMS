@@ -34,11 +34,15 @@ check_PROGRAMS = test_axis_utils
 # This is the source code for the test.
 test_axis_utils_SOURCES = test_axis_utils.F90
 
+TEST_EXTENSIONS = .sh
+SH_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
+                  $(top_srcdir)/tap-driver.sh
+
 # Run the test program.
 TESTS = test_axis_utils2.sh
 
 # Copy over other needed files to the srcdir
-EXTRA_DIST = input_base.nml test_axis_utils2.sh
+EXTRA_DIST = test_axis_utils2.sh
 
 # Clean up
-CLEANFILES = input.nml *.out*
+CLEANFILES = input.nml *.out* *.nc* *.dpi *.spi *.dyn *.spl

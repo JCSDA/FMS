@@ -25,10 +25,10 @@ AC_PREREQ([2.69])
 
 # Initialize with name, version, and support email address.
 AC_INIT([GFDL FMS Library],
-  [2021.03.0-dev],
+  [2022.03.0-dev],
   [gfdl.climate.model.info@noaa.gov],
   [FMS],
-  [https://www.gfdl.noaa.gov/fms])
+  [https://www.github.com/NOAA-GFDL/FMS])
 
 # Find out about the host we're building on.
 AC_CANONICAL_HOST
@@ -50,7 +50,7 @@ LT_INIT()
 # is, then disable building shared libraries.  Note, the user can still override
 # this by using --enable-shared when running the configure script.
 AS_IF([test x${CRAYPE_VERSION:+yes} = "xyes"],[
-  AS_IF([test x${CRAYPE_LINK_TYP} = "xstatic"],
+  AS_IF([test x${CRAYPE_LINK_TYPE} = "xstatic"],
         [AC_DISABLE_SHARED])])
 
 
@@ -67,15 +67,76 @@ AC_ARG_WITH([mpi],
 AS_IF([test ${with_mpi:-yes} = yes],
   [with_mpi=yes],
   [with_mpi=no])
+AC_ARG_WITH([yaml],
+  [AS_HELP_STRING([--with-yaml],
+    [Build with YAML support.  This option will be ignored if --disable-fortran-flag-setting is also given. (Default no)])])
+AS_IF([test ${with_yaml:-no} = no],
+  [with_yaml=no],
+  [with_yaml=yes])
 AC_ARG_ENABLE([setting-flags],
   [AS_HELP_STRING([--enable-setting-flags],
     [Allow configure to set some compiler flags.  Disabling this will also disable any other --with or --enable options that set flags, and will only use user-provided falgs. (Default yes)])])
 AS_IF([test ${enable_setting_flags:-yes} = yes],
   [enable_setting_flags=yes],
   [enable_setting_flags=no])
+AC_ARG_ENABLE([code-coverage],
+  [AS_HELP_STRING([--enable-code-coverage],
+    [Allow configure to set flags and add check-code-coverage target for code coverage analysis (Default no)])])
+AS_IF([test ${enable_code_coverage:-no} = no],
+  [enable_code_coverage=no],
+  [enable_code_coverage=yes])
+# individual mixed precision overload macros
+AC_ARG_ENABLE([overload-r4],
+  [AS_HELP_STRING([--enable-overload-r4],
+    [Enables the OVERLOAD_R4 macro to compile with 4 byte real routine overloads. (Default no)])])
+AS_IF([test ${enable_overload_r4:-no} = yes],
+  [enable_overload_r4=yes],
+  [enable_overload_r4=no])
+AC_ARG_ENABLE([overload-c4],
+  [AS_HELP_STRING([--enable-overload-c4],
+    [Enables the OVERLOAD_C4 macro to compile with 4 byte complex routine overloads. (Default no)])])
+AS_IF([test ${enable_overload_c4:-no} = yes],
+  [enable_overload_c4=yes],
+  [enable_overload_c4=no])
+AC_ARG_ENABLE([overload-c8],
+  [AS_HELP_STRING([--enable-overload-c8],
+    [Enables the OVERLOAD_C8 macro to compile with 8 byte real routine overloads. (Default no)])])
+AS_IF([test ${enable_overload_c8:-no} = yes],
+  [enable_overload_c8=yes],
+  [enable_overload_c8=no])
+AC_ARG_ENABLE([8byte-int],
+  [AS_HELP_STRING([--disable-8byte-int],
+    [Enables the no_8byte_integers macro to compile with only 4 byte integer routines. (Default no)])])
+AS_IF([test ${enable_8byte_int:-no} = yes],
+  [enable_8byte_int=yes],
+  [enable_8byte_int=no])
+
+# user enabled testing with input files
+AC_MSG_CHECKING([whether to enable tests with input files])
+AC_ARG_ENABLE([test-input],
+            [AS_HELP_STRING([--enable-test-input="path/to/input"],
+            [Enable tests using input netcdf files, if present in the given full directory.])])
+AC_MSG_RESULT([$enable_test_input])
+
+# require path to be given
+AS_IF([test "x$enable_test_input" = "xyes"],
+    [AC_MSG_ERROR([Test input enabled, but no directory given with --enable-test-input=/path])],
+    [AS_IF([test "x$enable_test_input" != "xno"],
+        [TEST_INPUT_PATH="$enable_test_input"],[])]
+)
+
+# if set, check directory exists
+AS_IF([test "$TEST_INPUT_PATH" = ""],
+  [],
+  [AS_IF([test -d $TEST_INPUT_PATH],[],
+    [AC_MSG_ERROR([Test input enabled, but directory $TEST_INPUT_PATH not found]) ]
+  )])
+
+# substitute path for input
+AC_SUBST([TEST_INPUT_PATH])
 
 # Does the user want to build documentation?
-AC_MSG_CHECKING([whether documentation should be build (requires doxygen)])
+AC_MSG_CHECKING([whether documentation should be built (requires doxygen)])
 AC_ARG_ENABLE([docs],
               [AS_HELP_STRING([--enable-docs],
                               [enable building of documentation with doxygen.])])
@@ -122,6 +183,19 @@ if test $with_mpi = yes; then
   AC_CHECK_FUNC([MPI_Init], [], [AC_MSG_ERROR([Can't find the MPI C library.  Set CC/LDFLAGS/LIBS])])
 fi
 
+# Require yaml
+if test $with_yaml = yes; then
+  AC_CHECK_HEADERS([yaml.h], [], [AC_MSG_ERROR(["Can't find the libYAML C header file.  Set CC/CPPFLAGS/CFLAGS"])])
+  AC_SEARCH_LIBS([yaml_parser_initialize], [yaml], [], [AC_MSG_ERROR(["Can't find the libYAML C library.  Set CC/LDFLAGS/LIBS"])])
+
+  #If the test pass, define use_yaml macro
+  AC_DEFINE([use_yaml], [1], [This is required to use yaml parser])
+
+  AM_CONDITIONAL([SKIP_PARSER_TESTS], false )
+else
+  AM_CONDITIONAL([SKIP_PARSER_TESTS], true )
+fi
+
 # Require netCDF
 AC_CHECK_HEADERS([netcdf.h], [], [AC_MSG_ERROR([Can't find the netCDF C header file.  Set CPPFLAGS/CFLAGS])])
 AC_SEARCH_LIBS([nc_create], [netcdf], [], [AC_MSG_ERROR([Can't find the netCDF C library.  Set LDFLAGS/LIBS])])
@@ -155,6 +229,16 @@ if test $with_mpi = yes; then
   GX_FC_CHECK_MOD([mpi], [], [], [AC_MSG_ERROR([Can't find the MPI Fortran module.  Set FC/CPPFLAGS/FCFLAGS])])
   AC_CHECK_FUNC([MPI_init], [], [AC_MSG_ERROR([Can't find the MPI Fortran library.  Set FC/LDFLAGS/LIBS])])
 fi
+# check intel compiler and coverage tools are avaiable if code coverage is enabled
+if test "$enable_code_coverage" = yes; then
+  if test ! -z "`$FC --version | grep ifort`"; then
+    AC_CHECK_PROGS([PROFMERGE],[profmerge])
+    AC_CHECK_PROGS([CODECOV], [codecov])
+  else
+    AC_MSG_ERROR([Intel compiler and coverage tools required for coverage report])
+  fi
+fi
+AM_CONDITIONAL(COV, [test "$enable_code_coverage" = yes])
 
 # Require netCDF
 GX_FC_CHECK_MOD([netcdf], [], [], [AC_MSG_ERROR([Can't find the netCDF Fortran module.  Set CPPFLAGS/FCFLAGS])])
@@ -205,6 +289,19 @@ if test $enable_setting_flags = yes; then
     GX_FC_DEFAULT_REAL_KIND8_FLAG([dnl
       FCFLAGS="$FCFLAGS $FC_DEFAULT_REAL_KIND8_FLAG"])
   fi
+  # individual mixed precision overloads
+  if test $enable_overload_r4 = yes; then
+    AC_DEFINE([OVERLOAD_R4], [1], [Set to overload with the R4 Fortran routines])
+  fi
+  if test $enable_overload_c4 = yes; then
+    AC_DEFINE([OVERLOAD_C4], [1], [Set to overload with the C4 Fortran routines])
+  fi
+  if test $enable_overload_c8 = yes; then
+    AC_DEFINE([OVERLOAD_C8], [1], [Set to overload with the C8 Fortran routines])
+  fi
+  if test $enable_8byte_int = yes; then
+    AC_DEFINE([no_8byte_integers], [1], [Set to disable 8 byte integer Fortran routines])
+  fi
 
   # Add Cray Pointer support flag
   if test ! -z "$FC_CRAY_POINTER_FLAG"; then
@@ -219,10 +316,13 @@ if test $enable_setting_flags = yes; then
   if test ! -z "$OPENMP_FCFLAGS"; then
     FCFLAGS="$FCFLAGS $OPENMP_FCFLAGS"
   fi
-fi
 
-# Define an AM_CONDITIONAL to determine if you are on a CRAY
-AM_CONDITIONAL([CRAY], [test `env | grep CRAY | wc -l` -gt 0])
+  # Add code coverage flags
+  if test $enable_code_coverage = yes; then
+    FCFLAGS="$FCFLAGS -prof-gen=srcpos"
+    CFLAGS="$CFLAGS -prof-gen=srcpos"
+  fi
+fi
 
 # Find which mpi launcher to use
 AC_CHECK_PROGS([MPI_LAUNCHER],[srun aprun mpirun])
@@ -273,22 +373,22 @@ if test -n "$fc_version_info"; then
 fi
 
 # Check if gcc is 11.1 for class(*) select type bug
-AC_MSG_CHECKING([if gcc 11 is loaded])
-if [ test -n "`$FC --version | grep GNU | grep 11\..\..`" ]; then
+AC_MSG_CHECKING([if gcc 11.1.0 is loaded])
+if [ test -n "`$FC --version | grep GNU | grep 11\.1\..`" ]; then
   AC_MSG_RESULT([yes])
-  AC_MSG_ERROR([Compilation with gcc and gfortran 11 is unsupported by this version\
- of FMS. Please use another compiler version])
+  AC_MSG_ERROR([Compilation with gcc and gfortran 11.1.0 is unsupported \
+by this version of FMS due to a bug in the compiler. Please use a different version of gcc/gfortran.])
 else
   AC_MSG_RESULT([no])
 fi
-
-# Check if netcdf is version 4.7.4 to skip failing fms2_io tests
-AC_MSG_CHECKING([if netCDF 4.7.4 is loaded])
-if [ test "`nc-config --version`" == "netCDF 4.7.4" ]; then
-  AM_CONDITIONAL([SKIP_FMS2_IO_TESTS], true )
+# Check if gcc >=10 is used with mpich
+# adds compiler arg needed for mpich compilation if found
+AC_MSG_CHECKING([if gcc 10 or greater is loaded with mpich])
+if [ test "`$FC --version | grep GNU | grep -E ' 1[0-9]\.[0-9]*\.[0-9]*$'`" -a "`which $FC | grep -i mpich`" ]; then
   AC_MSG_RESULT([yes])
+  AC_MSG_WARN([Adding -fallow-argument-mismatch to FCFLAGS to allow compilation with gcc >=10 and mpich])
+  FCFLAGS="$FCFLAGS -fallow-argument-mismatch"
 else
-  AM_CONDITIONAL([SKIP_FMS2_IO_TESTS], false )
   AC_MSG_RESULT([no])
 fi
 
@@ -319,6 +419,7 @@ AC_CONFIG_FILES([
   time_interp/Makefile
   time_manager/Makefile
   constants/Makefile
+  constants4/Makefile
   platform/Makefile
   fms/Makefile
   fms2_io/Makefile
@@ -347,7 +448,10 @@ AC_CONFIG_FILES([
   random_numbers/Makefile
   libFMS/Makefile
   docs/Makefile
-  test_fms/test_common.sh
+  parser/Makefile
+  string_utils/Makefile
+  test_fms/test-lib.sh
+  test_fms/intel_coverage.sh
   test_fms/Makefile
   test_fms/diag_manager/Makefile
   test_fms/data_override/Makefile
@@ -367,12 +471,9 @@ AC_CONFIG_FILES([
   test_fms/mosaic/Makefile
   test_fms/affinity/Makefile
   test_fms/coupler/Makefile
+  test_fms/parser/Makefile
+  test_fms/string_utils/Makefile
   FMS.pc
   ])
 
 AC_OUTPUT()
-
-## if tests are being skipped, output warning at end of output
-if [ test "`nc-config --version`" == "netCDF 4.7.4" ]; then
-  AC_MSG_RESULT([Warning: netCDF v4.7.4 is loaded. Incompatible fms2_io tests will be skipped and there may be netCDF issues with model runs.])
-fi

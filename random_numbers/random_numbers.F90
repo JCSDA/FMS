@@ -25,9 +25,6 @@
 !!  in the range 0 to 1.
 !!  This version uses the Mersenne Twister to generate random numbers on [0, 1].
 
-!> @file
-!> @brief File for @ref random_numbers_mod
-
 module random_numbers_mod
 
   use MersenneTwister_mod, only: randomNumberSequence, & ! The random number engine.
@@ -86,7 +83,7 @@ contains
     type(randomNumberStream), intent(inout) :: stream
     real,                     intent(  out) :: number
 
-    number = getRandomReal(stream%theNumbers)
+    number = real(getRandomReal(stream%theNumbers))
   end subroutine getRandomNumber_Scalar
   ! ---------------------------------------------------------
   !> Draws random 1D array
@@ -98,7 +95,7 @@ contains
     integer :: i
 
     do i = 1, size(numbers)
-      numbers(i) = getRandomReal(stream%theNumbers)
+      numbers(i) = real(getRandomReal(stream%theNumbers))
     end do
   end subroutine getRandomNumber_1D
   ! ---------------------------------------------------------

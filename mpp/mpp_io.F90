@@ -188,8 +188,8 @@
 !!
 !!   A set of <I>attributes</I> for each variable is also available. The
 !!   variable definitions and attribute information is written/read by calling
-!!   <LINK SRC="#mpp_write_meta">mpp_write_meta</LINK> or <LINK SRC="#mpp_read_meta">mpp_read_meta</LINK>. A typical calling
-!!   sequence for writing data might be:
+!!   <LINK SRC="#mpp_write_meta">mpp_write_meta</LINK> or <LINK SRC="#mpp_read_meta">mpp_read_meta</LINK>. A typical
+!!   calling sequence for writing data might be:
 !!
 !!   <PRE>
 !!   ...
@@ -291,7 +291,9 @@
 !!   <TT>mpp_get_atts</TT> returns all global attributes for
 !!   the file in the derived type <TT>atttype(natt)</TT>.
 !!   <TT>mpp_get_vars</TT> returns variable types
-!!   (<TT>fieldtype(nvar)</TT>).  Since the record dimension data are not allocated for calls to <LINK SRC="#mpp_write">mpp_write</LINK>, a separate call to  <TT>mpp_get_times</TT> is required to access record dimension data.  Subsequent calls to
+!!   (<TT>fieldtype(nvar)</TT>).  Since the record dimension data are not allocated for calls to
+!!   <LINK SRC="#mpp_write">mpp_write</LINK>, a separate call to  <TT>mpp_get_times</TT> is required to access record
+!!   dimension data.  Subsequent calls to
 !!   <TT>mpp_read</TT> return the field data arrays corresponding to
 !!   the fieldtype.  The <TT>domain</TT> type is an optional
 !!   argument.  If <TT>domain</TT> is omitted, the incoming field
@@ -303,11 +305,9 @@
 !! </DESCRIPTION>
 !! @endhtmlonly
 
-!> @file
-!> @brief File for @ref mpp_io_mod
-
 !> @addtogroup mpp_io_mod
 !> @{
+ 
 module mpp_io_mod
 
 #define _MAX_FILE_UNITS 1024
@@ -371,8 +371,8 @@ private
   public :: default_field, default_axis, default_att
 
   !--- public interface from mpp_io_util.h ----------------------
-  public :: mpp_get_id, mpp_get_ncid, mpp_get_unit_range, mpp_is_valid
-  public :: mpp_set_unit_range, mpp_get_info, mpp_get_atts, mpp_get_fields
+  public :: mpp_get_id, mpp_get_ncid, mpp_is_valid
+  public :: mpp_get_info, mpp_get_atts, mpp_get_fields
   public :: mpp_get_times, mpp_get_axes, mpp_get_recdimid, mpp_get_axis_data, mpp_get_axis_by_name
   public :: mpp_io_set_stack_size, mpp_get_field_index, mpp_get_axis_index
   public :: mpp_get_field_name, mpp_get_att_value, mpp_get_att_length
@@ -796,15 +796,92 @@ type :: atttype
 !  <IN NAME="cval"></IN>
 !  <IN NAME="ival"></IN>
 !  <IN NAME="rval"></IN>
-! <NOTE>
-!    Note that <TT>mpp_write_meta</TT> is expecting axis data on the
-!    <I>global</I> domain even if it is a domain-decomposed axis.
-!
-!    You cannot interleave calls to <TT>mpp_write</TT> and
-!    <TT>mpp_write_meta</TT>: the first call to
-!    <TT>mpp_write</TT> implies that metadata specification is complete.
-! </NOTE>
-! </INTERFACE>
+
+!> Each file can contain any number of fields,
+!! which can be functions of 0-3 spatial axes and 0-1 time axes. Axis
+!! descriptors are stored in the <axistype> structure and field
+!! descriptors in the <fieldtype> structure.
+!!
+!! The metadata contained in the type is always written for each axis and
+!! field. Any other metadata one wishes to attach to an axis or field
+!! can subsequently be passed to mpp_write_meta using the ID, as shown below.
+!!
+!! mpp_write_meta can take several forms:
+!!
+!!  mpp_write_meta( unit, name, rval=rval, pack=pack )
+!!  mpp_write_meta( unit, name, ival=ival )
+!!  mpp_write_meta( unit, name, cval=cval )
+!!      integer, intent(in) :: unit
+!!      character(len=*), intent(in) :: name
+!!      real, intent(in), optional :: rval(:)
+!!      integer, intent(in), optional :: ival(:)
+!!      character(len=*), intent(in), optional :: cval
+!!
+!! This form defines global metadata associated with the file as a
+!! whole. The attribute is named <name> and can take on a real, integer
+!! or character value. <rval> and <ival> can be scalar or 1D arrays.
+!!
+!!  mpp_write_meta( unit, id, name, rval=rval, pack=pack )
+!!  mpp_write_meta( unit, id, name, ival=ival )
+!!  mpp_write_meta( unit, id, name, cval=cval )
+!!      integer, intent(in) :: unit, id
+!!      character(len=*), intent(in) :: name
+!!      real, intent(in), optional :: rval(:)
+!!      integer, intent(in), optional :: ival(:)
+!!      character(len=*), intent(in), optional :: cval
+!!
+!! This form defines metadata associated with a previously defined
+!! axis or field, identified to mpp_write_meta by its unique ID <id>.
+!! The attribute is named <name> and can take on a real, integer
+!! or character value. <rval> and <ival> can be scalar or 1D arrays.
+!! This need not be called for attributes already contained in
+!! the type.
+!!
+!! PACK can take values 1,2,4,8. This only has meaning when writing
+!! floating point numbers. The value of PACK defines the number of words
+!! written into 8 bytes. For pack=4 and pack=8, an integer value is
+!! written: rval is assumed to have been scaled to the appropriate dynamic
+!! range.
+!! PACK currently only works for netCDF files, and is ignored otherwise.
+!!
+!!  subroutine mpp_write_meta_axis( unit, axis, name, units, longname, &
+!!        cartesian, sense, domain, data )
+!!     integer, intent(in) :: unit
+!!     type(axistype), intent(inout) :: axis
+!!     character(len=*), intent(in) :: name, units, longname
+!!     character(len=*), intent(in), optional :: cartesian
+!!     integer, intent(in), optional :: sense
+!!     type(domain1D), intent(in), optional :: domain
+!!     real, intent(in), optional :: data(:)
+!!
+!! This form defines a time or space axis. Metadata corresponding to the
+!! type above are written to the file on <unit>. A unique ID for subsequent
+!! references to this axis is returned in axis%id. If the <domain>
+!! element is present, this is recognized as a distributed data axis
+!! and domain decomposition information is also written if required (the
+!! domain decomposition info is required for multi-fileset multi-threaded
+!! I/O). If the <datLINK> element is allocated, it is considered to be a
+!! space axis, otherwise it is a time axis with an unlimited dimension.
+!! Only one time axis is allowed per file.
+!! @code{.F90}
+!!  subroutine mpp_write_meta_field( unit, field, axes, name, units, longname
+!!                                   standard_name, min, max, missing, fill, scale, add, pack)
+!!     integer, intent(in) :: unit
+!!     type(fieldtype), intent(out) :: field
+!!     type(axistype), intent(in) :: axes(:)
+!!     character(len=*), intent(in) :: name, units, longname, standard_name
+!!     real, intent(in), optional :: min, max, missing, fill, scale, add
+!!     integer, intent(in), optional :: pack
+!! @endcode
+!! This form defines a field. Metadata corresponding to the type
+!! above are written to the file on <unit>. A unique ID for subsequent
+!! references to this field is returned in field%id. At least one axis
+!! must be associated, 0D variables are not considered. mpp_write_meta
+!! must previously have been called on all axes associated with this
+!! field.
+!!
+!! The mpp_write_meta package also includes subroutines write_attribute and
+!! write_attribute_netcdf, that are private to this module.
   interface mpp_write_meta
      module procedure mpp_write_meta_var
      module procedure mpp_write_meta_scalar_r

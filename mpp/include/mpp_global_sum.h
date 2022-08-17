@@ -16,6 +16,8 @@
 !* You should have received a copy of the GNU Lesser General Public
 !* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
 !***********************************************************************
+!> @addtogroup mpp_domains_mod
+!> @{
   function MPP_GLOBAL_SUM_( domain, field, flags, position, tile_count, overflow_check)
     MPP_TYPE_ :: MPP_GLOBAL_SUM_
     type(domain2D), intent(in) :: domain
@@ -43,16 +45,19 @@
 
     call mpp_get_domain_shift(domain, ishift, jshift, position)
 
-    if( size(field,1).EQ.domain%x(tile)%compute%size+ishift .AND. size(field,2).EQ.domain%y(tile)%compute%size+jshift )then
+    if( size(field,1).EQ.domain%x(tile)%compute%size+ishift .AND. &
+      & size(field,2).EQ.domain%y(tile)%compute%size+jshift )then
 !field is on compute domain
         ioff = -domain%x(tile)%compute%begin + 1
         joff = -domain%y(tile)%compute%begin + 1
-    else if( size(field,1).EQ.domain%x(tile)%memory%size+ishift .AND. size(field,2).EQ.domain%y(tile)%memory%size+jshift )then
+    else if( size(field,1).EQ.domain%x(tile)%memory%size+ishift .AND. &
+           & size(field,2).EQ.domain%y(tile)%memory%size+jshift )then
 !field is on data domain
         ioff = -domain%x(tile)%data%begin + 1
         joff = -domain%y(tile)%data%begin + 1
     else
-        call mpp_error( FATAL, 'MPP_GLOBAL_SUM_: incoming field array must match either compute domain or data domain.' )
+        call mpp_error( FATAL, &
+                       &  'MPP_GLOBAL_SUM_: incoming field array must match either compute domain or data domain.' )
     end if
 
     if(domain%ntiles > MAX_TILES)  call mpp_error( FATAL,  &
@@ -108,7 +113,8 @@
              do list = 1, nlist - 1
                 m = mod( domain%pos+nlist-list, nlist )
                 if( domain%list(m)%pe == domain%list(m)%tile_root_pe ) then
-                    call mpp_recv( nbrgsum(1), glen=size(domain%list(m)%x(:)), from_pe=domain%list(m)%pe, tag=COMM_TAG_1)
+                    call mpp_recv( nbrgsum(1), glen=size(domain%list(m)%x(:)), from_pe=domain%list(m)%pe, &
+                                 &  tag=COMM_TAG_1)
                     do n = 1, size(domain%list(m)%x(:))
                        gsum(domain%list(m)%tile_id(n)) = nbrgsum(n)
                     end do
@@ -137,7 +143,8 @@
           MPP_GLOBAL_SUM_ = mpp_reproducing_sum(field2D, overflow_check=overflow_check)
        endif
 #else
-        call mpp_error( FATAL, 'MPP_GLOBAL_SUM_: BITWISE_EFP_SUM is only implemented for real number, contact developer')
+        call mpp_error( FATAL, &
+                       &  'MPP_GLOBAL_SUM_: BITWISE_EFP_SUM is only implemented for real number, contact developer')
 #endif
     else  !this is not bitwise-exact across different PE counts
        ioffset = domain%x(tile)%loffset*ishift; joffset = domain%y(tile)%loffset*jshift
@@ -150,3 +157,4 @@
 
     return
   end function MPP_GLOBAL_SUM_
+!> @}

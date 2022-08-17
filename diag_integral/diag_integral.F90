@@ -16,7 +16,6 @@
 !* You should have received a copy of the GNU Lesser General Public
 !* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
 !***********************************************************************
-
 !> @defgroup diag_integral_mod diag_integral_mod
 !> @ingroup diag_integral
 !!
@@ -24,42 +23,8 @@
 !!
 !! @brief This module computes and outputs global and / or hemispheric physics
 !!        integrals.
-!!
-!! <b> Public Interfaces: </b>
-!!
-!! - sum_diag_integral_field
-!!
-!! <b> Public Subroutines: </b>
-!!
-!! - diag_integral_init
-!! - diag_integral_field_init
-!! - diag_integral_output
-!! - diag_integral_end
-!! - sum_field_2d
-!! - sum_field_3d
-!! - sum_field_wght_3d
-!! - sum_field_2d_hemi
-!!
-!! <b> Private Functions: </b>
-!!
-!! - set_axis_time
-!! - get_field_index
-!! - get_axis_time
-!! - diag_integral_alarm
-!! - vert_diag_integral
-!!
-!! <b> Private Subroutines: </b>
-!!
-!! - write_field_averages
-!! - format_text_init
-!! - format_data_init
-!!
 
-!> @file
-!! @brief File for @ref diag_integral_mod
-
-                     module diag_integral_mod
-
+module diag_integral_mod
 
 !###############################################################################
 
@@ -69,8 +34,8 @@ use time_manager_mod, only:  time_type, get_time, set_time,  &
                              operator(+),  operator(-),      &
                              operator(==), operator(>=),     &
                              operator(/=)
-use mpp_mod,          only:  input_nml_file, get_unit
-use fms_mod,          only:  open_file, error_mesg, &
+use mpp_mod,          only:  input_nml_file
+use fms_mod,          only:  error_mesg, &
                              check_nml_error, &
                              fms_init, &
                              mpp_pe, mpp_root_pe,&
@@ -326,10 +291,8 @@ real,dimension(:,:), intent(in), optional :: area_in
 !-------------------------------------------------------------------------------
 !    read namelist.
 !-------------------------------------------------------------------------------
-    if ( file_exists('input.nml')) then
-        read (input_nml_file, nml=diag_integral_nml, iostat=io)
-        ierr = check_nml_error(io,'diag_integral_nml')
-    endif
+      read (input_nml_file, nml=diag_integral_nml, iostat=io)
+      ierr = check_nml_error(io,'diag_integral_nml')
 
 !-------------------------------------------------------------------------------
 !    write version number and namelist to logfile.
@@ -381,7 +344,7 @@ real,dimension(:,:), intent(in), optional :: area_in
           file_name = ensemble_file_name(file_name)
         endif
         nc = len_trim(file_name)
-        diag_unit = open_file (file_name(1:nc), action='write')
+        open(newunit=diag_unit, file=file_name(1:nc), action='write')
       endif
 
 !-------------------------------------------------------------------------------
@@ -954,6 +917,7 @@ type (time_type), intent(in) :: Time
 !    deallocate module variables.
 !-------------------------------------------------------------------------------
       deallocate (area)
+      if (diag_unit /= 0) close(diag_unit)
 
 !-------------------------------------------------------------------------------
 !    mark the module as uninitialized.
@@ -1142,7 +1106,7 @@ type (time_type), intent(in) :: Time !< integral time stamp at the current time
         rcount = real(field_count(i))
         call mpp_sum (rcount)
         call mpp_sum (field_sum(i))
-        icount = rcount
+        icount = int(rcount, i8_kind)
 
 !-------------------------------------------------------------------------------
 !    verify that all the data expected for an integral has been
@@ -1152,7 +1116,7 @@ type (time_type), intent(in) :: Time !< integral time stamp at the current time
                      ('diag_integral_mod',  &
                       'field_count equals zero for field_name ' //  &
                        field_name(i)(1:len_trim(field_name(i))), FATAL )
-        kount = icount/field_size
+        kount = int(icount/field_size)
         if ((field_size)*kount /= icount) then
            print*,"name,pe,kount,field_size,icount,rcount=",trim(field_name(i)),mpp_pe(),kount,field_size,icount,rcount
            call error_mesg &

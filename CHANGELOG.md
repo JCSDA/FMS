@@ -6,6 +6,105 @@ and this project uses `yyyy.rr[.pp]`, where `yyyy` is the year a patch is releas
 `rr` is a sequential release number (starting from `01`), and an optional two-digit
 sequential patch number (starting from `01`).
 
+## [2022.02] - 2022-04-29
+### Known Issues
+- If using GCC 10 or higher as well as MPICH, compilation errors will occur unless `-fallow-argument-mismatch` is included in the Fortran compiler flags
+- GCC 11.1.0 is unsupported due to compilation issues with select type. The issue is resolved in later GCC releases.
+### Added
+- STRING_UTILS: Adds a module, `fms_string_utils_mod`, for common string operations throughout FMS
+- LIBFMS: makes recently added routines available through the global `fms` module
+- CMAKE: Adds build option for position independent code
+- CONSTANTS: Adds macros to load constants for different modeling systems/uses between GFDL, GEOS and GFS. Can be selected in cmake with `-DCONSTANTS=<GEOS|GFDL|GFS>`
+### Changed
+- STRING_UTILS: Refactored string routine definitions from fms_mod and fms2_io_mod to be located in fms_string_utils_mod
+- CONSTANTS: Makes fmsconstants.F90 contain the constant definitions, with constants_mod refactored to hold the same values
+- MOSAIC2: changes grid 'version' names and documentation to be more descriptive
+### Removed
+- FMS_MOD: Removes fms_c.c and fms_c.h files from the fms directory
+### Fixed
+- FMS2_IO: Fixed bug casuing non-root pe's to fail during the flush_file routine
+### Tag Commit Hashes
+- 2022.02-alpha1 270c2a4e1a94229a2ae6b1e431c473589b6e15c3
+- 2022.02-alpha2 7768ad1d4941b92ec8f40d34b1b517f5bde3df4e
+- 2022.02-beta1  689579eea6bf7a25c64e8b823551ec588be90984
+
+## [2022.01] - 2022-03-25
+### Known Issues
+- The MPICH MPI implementation is unsupported when used alongside GCC 10 or 11 due to compilation issues with the mixed precision reals. MPICH can still be used to compile FMS with GCC 9 or earlier, or with other compilers.
+- GCC 11.1.0 is unsupported due to compilation issues with `select type`. The issue appears to be resolved in later GCC releases
+### Added
+- FMS2_IO: Added a macro `MAX_NUM_RESTART_VARS_` to allow the max amount of restart variables to be set at compile time
+- TESTING: Adds a configure option, `--enable-code-coverage`, to build a code coverage report using intel's codecov
+- AFFINITY: Adds an initialization check to `fms_affinity_set`, and updates test program with init/end routines
+- FMS2_IO: Adds an optional argument to ignore embedded checksum checks when reading restart files
+### Changed
+- TESTING: Changes the testing suite scripts for various improvements such improved output, tests with input files, and adding/fixing new tests
+- MPP: Change variable names in mpp to use more inclusive language
+- DOCS: Updates to correct branch name and doxygen guide for functions, and adds CI information page
+### Fixed
+- Fixes compilation warnings throughout the code, mainly for uninitialized or unused variables
+- Fixed any code not adhering to the projects style guide (mainly line length fixes) so that all future changes can be checked with a linter
+- MOSAIC2: Adds `r8_kind` casts to calls to C routines in order match precision of doubles
+- TESTS: Fixes crashes in fms2_io tests from namelist read errors
+### Tag Commit Hashes
+- 2022.01-alpha1 516a5efa681e5ae954c11c0c90677b4444e28ec4
+- 2022.01-beta1  12da12884f8dc8bde47b478c997b0e5d49260a1c
+- 2022.01-alpha2 28e8e3e751a6d5d81b640fb779304329f3edb82d
+- 2022.01-beta2  7b78a73a5ba7acf5d3d932ecfe081e5040e2c778
+## [2021.04] - 2021-12-23
+### Known Issues
+- GCC 11.1.0 is unsupported due to compilation issues with `select type`. The issue appears to be resolved in later GCC releases
+### Added
+- PARSER: Adds a parser using the libyaml C library to support yaml format input files.
+  Currently implemented in data override and can be enabled with the configure option  `--with-yaml` or with CMake option `-DWITH_YAML`
+- FMS: Adds an interface, `fms_c2f_string`, to convert C strings and C pointers to Fortran strings
+- MPP: Adds a routine `mpp_shift_nest_domains` and a field to `nest_domain_type` to allow for modifying the position of a given nest domain
+- FMS2_IO: Reintroduces the option to flush_nc_files with fms2_io
+### Changed
+- DIAG_MANAGER: Cleans up IO code and replaces any remaining dependencies to mpp_io with fms2_io
+- FMS_IO: Changes to allow for custom paths for namelists, field_table, and the INPUT directory
+- EXCHANGE: Changes real sizes in xgrid and gradient modules to be explicitly r8_kind to prevent runtime issues with mixed precision
+### Deprecated
+- MPP: `get_unit` has been deperecated in favor of the Fortran intrinsic `newunit` and will now generate a warning if used
+### Removed
+- TIME_MANAGER: Removes deprecated array-based gregorian calender calculations that were replaced in 2021.02
+### Fixed
+- DIAG_MANAGER: Fixes issues with 3D diurnal diagnostic output and removes a redundant write_data call
+- TIME_INTERP: Fixes load_record read_data call for 3d variables with fms2_io and eliminates redundant data loading and validity checking for on-grid interpolations.
+- MPP: Fixed a bug with non-blocking domain updates failing on GNU compilers from uninitialized values
+- MPP: Fixed issues with the `mpp_type_free` function causing errors and memory leaks when freeing the `mpp_byte` type
+
+### Tag Commit Hashes
+- 2021.04-alpha1 (e0b998321611f80f2d0c587a13b8c03c173d5520)
+- 2021.04-alpha2 (ab1b0a4cb2beac72d889d94a628e0d02092723b2)
+- 2021.04-alpha3 (90583aeb369831b01296ab4b0e7e6a1b69ed91b1)
+- 2021.04-beta1  (6d179fcdc189070f74d49e0025d072fa304e96d6)
+
+## [2021.03] - 2021-08-16
+### Known Issues
+- DIAG_MANAGER: 3D diurnal diagnostic variables are not supported in this version of FMS
+### Added
+- FMS2_IO: Documentation was added for FMS2_io to help users convert from fms_io/mpp_io
+### Changed
+- FMS2_IO: The error messages in FMS2_io were updated to give more useful information
+- TEST_FMS: The unit tests in mosaic, axis_utils, and time_interp_external were updated to use the FMS2_io version of these routines and are no longer skipped
+- DOCS: The doxygen generated documentation has been improved with more doxygen comments added and a more cohesive layout
+- TEST_FMS: Unit tests for time_manager were updated to use the new get/set_date_gregorian routines
+### Removed
+- MPP_IO: The namelist variable use_mpp_io was removed from interpolator, amip_interp, diag_manager, topography, xgrid, and data_override
+- MPP_IO: Any remaining fms_io/mpp_io calls from the source and test code were removed
+- FMS: Removes the hardcoded path for input.nml, path now may be specified in the call to `fms_init`
+### Fixed
+- MPP: Fixes algorithm used with nested grid updates to properly coalesce x-dir and y-dir pelists for vector quantities
+- CMAKE/AUTOTOOLS: Fixes for minor issues with filenames in both the CMake and autotools build systems
+- MPP: Restored deleted pset functionality needed by GFDL SCM by reinstating mpp_pset.F90
+- MPP: Fixed uninitialized variables for data domains in mpp domains broadcast routines
+- MPP: Minor memory leaks from deallocating domains
+- AXIS_UTILS: Fix PGI related error with string length sizes
+### Tag Commit Hashes
+- 2021.03-alpha1 (87d945d8dba6341f1f56631047ae5d3e5b4ab828)
+- 2021.03-beta1  (6d6ff9595ede12ea0a342ae014442708a27041d2)
+
 ## [2021.02] - 2021-05-20
 ### Added
 - FMS2_IO: Added fms2_io support for boundary condition restarts. `register_restart_region_2d` and `register_restart_region_3d` were added to fms2_io’s `register_restart_field` interface and `read_restart_bc` and `write_restart_bc` subroutines were added to read and write boundary conditions restarts. See [test_fms/fms2_io/test_bc_restart.F90](https://github.com/NOAA-GFDL/FMS/blob/9d55115a331685e4c6e01f2dfb3b770a9f80fa37/test_fms/fms2_io/test_bc_restart.F90) for sample usage.
@@ -52,7 +151,7 @@ sequential patch number (starting from `01`).
 ### Removed
 ### Fixed
 - MPP: Fixed a bug causing mpp_get_UG_domain_tile_pe_inf to seg fault from the incorrect assignment of an optional argument
-- FMS: Fixes issues with FMS unit tests failing from pointer allocations by reworking deallocate_unstruct_pass_type 
+- FMS: Fixes issues with FMS unit tests failing from pointer allocations by reworking deallocate_unstruct_pass_type
 - MPP_IO: Fixes unintentional printing of file attributes
 - An issue with the automake build system causing unnecessary rebuilds of source files
 - Fixes CMake build of the FMS library to install configuration files in the appropriate directories; and for OpenMP dependencies to the private

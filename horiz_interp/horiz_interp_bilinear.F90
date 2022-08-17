@@ -27,9 +27,6 @@
 !! An optional output mask field may be used in conjunction with
 !! the input mask to show where output data exists.
 
-!> @file
-!> @brief File for @ref horiz_interp_bilinear_mod
-
 module horiz_interp_bilinear_mod
 
   use mpp_mod,               only: mpp_error, FATAL, stdout, mpp_pe, mpp_root_pe
@@ -1275,7 +1272,7 @@ contains
                '           when searching for nearest element to value=',value
           write (unit,*) '           array(i) < array(i-1) for i=',i
           write (unit,*) '           array(i) for i=1..ia follows:'
-          call abort()
+          call mpp_error()
        endif
     enddo
     if (value .lt. array(1) .or. value .gt. array(ia)) then

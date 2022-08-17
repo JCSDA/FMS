@@ -24,9 +24,6 @@
 !! between the lowest model level and the ground
 !! using Monin-Obukhov scaling
 
-!> @file
-!> @brief File for @ref monin_obukhov_mod
-
 module monin_obukhov_mod
 
 use constants_mod, only: grav, vonkarm
@@ -116,7 +113,7 @@ contains
 
 subroutine monin_obukhov_init
 
-integer :: unit, ierr, io, logunit
+integer :: ierr, io, logunit
 
 !------------------- read namelist input -------------------------------
 

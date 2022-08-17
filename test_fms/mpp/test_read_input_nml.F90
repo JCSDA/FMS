@@ -27,7 +27,7 @@ program test_read_input_nml
   use mpp_mod, only : mpp_init, mpp_init_test_peset_allocated
   use mpp_mod, only : mpp_error, FATAL, NOTE
   use mpp_mod, only : read_input_nml, mpp_get_current_pelist_name
-  use mpp_mod, only : input_nml_file, INPUT_STR_LENGTH
+  use mpp_mod, only : input_nml_file
 #include<file_version.h>
 
 character(len=200) :: line !< Storage location of lines read from the input nml
@@ -82,7 +82,7 @@ if (test_numb == 1 .or. test_numb == 2 .or. test_numb == 4) then
 else if (test_numb.eq.3) then
   ! Test 3: Tests with an invalid pelist_name_in pass as an argument. An invalid
   ! pelist_name_in would be one who's size is greater than local pelist_name
-  current_pelist_name_len_plus1 = LEN(mpp_get_current_pelist_name())
+  current_pelist_name_len_plus1 = LEN(mpp_get_current_pelist_name()) + 1
   allocate(character(len=current_pelist_name_len_plus1) :: toobig)
   call read_input_nml(pelist_name_in=toobig)
                                                           ! Call read_input_nml
