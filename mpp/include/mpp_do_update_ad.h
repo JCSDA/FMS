@@ -35,6 +35,7 @@
       pointer(ptr_field, field)
       integer                     :: update_flags
       type(overlap_type), pointer :: overPtr => NULL()
+      character(len=8)            :: text
 
 !equate to mpp_domains_stack
       MPP_TYPE_ :: buffer(size(mpp_domains_stack(:)))
@@ -49,7 +50,8 @@
       integer :: n, l_size, l, m, i, j, k
       integer :: is, ie, js, je, tMe, dir
       integer :: buffer_recv_size, nlist, outunit
-
+      integer :: send_start_pos
+      integer :: send_msgsize(MAXLIST)
 
       outunit = stdout()
       ptr = LOC(mpp_domains_stack)
