@@ -21,7 +21,7 @@ Using the example directory structure above:
 ```
 # clone FMS
 cd ~/projects/JEDI
-git clone https://github.com/srherbener/FMS.git
+git clone https://github.com/JCSDA/FMS.git
 cd FMS
 git checkout feature/mac-fms-2023.04
 
