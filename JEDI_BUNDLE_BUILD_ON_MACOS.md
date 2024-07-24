@@ -22,6 +22,7 @@ Using the example directory structure above:
 # clone FMS
 cd ~/projects/JEDI
 git clone https://github.com/srherbener/FMS.git
+cd FMS
 git checkout feature/mac-fms-2023.04
 
 # build/install FMS
