@@ -59,7 +59,7 @@ option(OPENMP      "Build FMS with OpenMP support"        OFF)
 option(32BIT       "Build 32-bit (r4) FMS library"         ON)
 option(64BIT       "Build 64-bit (r8) FMS library"        OFF)
 option(FPIC        "Build with position independent code" OFF)
-option(SHARED_LIBS "Build shared/dynamic libraries"       OFF)
+option(SHARED_LIBS "Build shared/dynamic libraries"        ON)
 
 # Options for compiler definitions
 option(INTERNAL_FILE_NML     "Enable compiler definition -DINTERNAL_FILE_NML"      ON)
