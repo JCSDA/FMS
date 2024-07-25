@@ -14,6 +14,8 @@ Here is an example directory structure:
 
 ```
 
+Note that you need to do a `module unload fms` after you source your setup file and before you continue with the following steps.
+
 ## 2. Build and install FMS
 
 Using the example directory structure above:
